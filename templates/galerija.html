@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ui.gallery_page_title }} | {{ text_for(data.business.name) }}{% endblock %}
+
+{% block content %}
+<section class="content-page">
+  <section class="gallery-topline" data-reveal>
+    <span class="eyebrow">{{ ui.gallery_page_eyebrow }}</span>
+  </section>
+
+  <section class="gallery-stage" data-reveal data-gallery-slider data-autoplay="2600">
+    <div class="gallery-stage-media">
+      {% for item in data.gallery %}
+      <figure
+        class="gallery-slide{% if loop.first %} is-active{% endif %}"
+        data-gallery-slide
+        aria-hidden="{% if loop.first %}false{% else %}true{% endif %}">
+        {% if item.type == 'video' and item.video_url %}
+        <video class="gallery-video" muted loop playsinline {% if loop.first %}autoplay{% endif %}>
+          <source src="{% if item.video_url.startswith('http') %}{{ item.video_url }}{% else %}{{ url_for('static', filename=item.video_url) }}{% endif %}">
+        </video>
+        {% else %}
+        <img src="{{ url_for('static', filename=item.image) }}" alt="{{ text_for(item.title) }}">
+        {% endif %}
+      </figure>
+      {% endfor %}
+
+      <div class="gallery-stage-controls">
+        <button type="button" class="gallery-control" data-gallery-prev aria-label="{{ ui.gallery_prev_label }}">
+          <span aria-hidden="true">&#8249;</span>
+        </button>
+        <button type="button" class="gallery-control" data-gallery-next aria-label="{{ ui.gallery_next_label }}">
+          <span aria-hidden="true">&#8250;</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="gallery-stage-footer">
+      <div class="gallery-stage-copy">
+        {% for item in data.gallery %}
+        <div class="gallery-slide-copy{% if loop.first %} is-active{% endif %}" data-gallery-copy>
+          <span class="gallery-stage-kicker">{{ ui.gallery_item }} 0{{ loop.index }}</span>
+          <h2>{{ text_for(item.title) }}</h2>
+          <p>{{ text_for(item.description) }}</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="gallery-stage-dots" aria-label="{{ ui.gallery_navigation_label }}">
+        {% for item in data.gallery %}
+        <button
+          type="button"
+          class="gallery-dot{% if loop.first %} is-active{% endif %}"
+          data-gallery-dot
+          data-gallery-index="{{ loop.index0 }}"
+          aria-label="{{ ui.gallery_show_photo_label }} {{ loop.index }}">
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</section>
+{% endblock %}

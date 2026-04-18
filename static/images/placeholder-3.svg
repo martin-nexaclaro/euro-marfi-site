@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <rect width="1200" height="900" rx="48" fill="#06101B"/>
+  <rect x="100" y="100" width="1000" height="700" rx="40" fill="#0D1D33"/>
+  <path d="M180 640C300 490 420 410 550 410C680 410 790 500 940 660" stroke="#74FFBD" stroke-width="26" stroke-linecap="round"/>
+  <path d="M190 260H540" stroke="#78F0FF" stroke-width="26" stroke-linecap="round"/>
+  <path d="M190 320H480" stroke="#78F0FF" stroke-opacity=".7" stroke-width="18" stroke-linecap="round"/>
+  <rect x="710" y="220" width="220" height="220" rx="110" fill="#102847"/>
+  <circle cx="820" cy="330" r="74" fill="#78F0FF" fill-opacity=".24"/>
+  <rect x="300" y="540" width="600" height="110" rx="55" fill="#0B1626" stroke="#1B365B"/>
+  <text x="220" y="170" fill="#EDF4FF" font-family="Arial, sans-serif" font-size="42" font-weight="700">Brand / Team Placeholder</text>
+  <text x="240" y="745" fill="#99A9C2" font-family="Arial, sans-serif" font-size="28">Use a real branding, counter, or team image in this slot</text>
+</svg>

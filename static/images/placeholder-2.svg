@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <rect width="1200" height="900" rx="48" fill="#08111E"/>
+  <path d="M0 180C190 120 320 110 470 150C650 198 810 270 1200 140V900H0V180Z" fill="#0D1A2F"/>
+  <rect x="130" y="120" width="940" height="660" rx="42" fill="#0B1D35" stroke="#1B365B"/>
+  <rect x="190" y="190" width="340" height="420" rx="28" fill="#112443"/>
+  <rect x="570" y="190" width="440" height="70" rx="18" fill="#17345A"/>
+  <rect x="570" y="295" width="360" height="70" rx="18" fill="#143050"/>
+  <rect x="570" y="400" width="260" height="70" rx="18" fill="#112846"/>
+  <circle cx="896" cy="512" r="96" fill="#78F0FF" fill-opacity=".18"/>
+  <text x="190" y="710" fill="#EDF4FF" font-family="Arial, sans-serif" font-size="42" font-weight="700">Interior Placeholder</text>
+  <text x="190" y="760" fill="#99A9C2" font-family="Arial, sans-serif" font-size="28">Swap this file for a real customer area photo later</text>
+</svg>

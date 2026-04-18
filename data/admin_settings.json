@@ -1,0 +1,6 @@
+{
+  "username": "admin",
+  "password_hash": "scrypt:32768:8:1$kCGPgwPWIbYoGlVm$88b9527bafaee7d5786ad87e5716d195a27a7ad59c3cfb3703fae7b7e8705e61e0b93ea2544cac86c9ea26611fe99c02da232796f900a7327b81ca6878be9938",
+  "totp_enabled": false,
+  "totp_secret": ""
+}

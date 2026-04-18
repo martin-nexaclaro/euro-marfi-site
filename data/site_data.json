@@ -1,0 +1,220 @@
+{
+  "business": {
+    "name": {
+      "mk": "ЕУРО МАРФИ",
+      "en": "EURO MARFI"
+    },
+    "tagline": {
+      "mk": "Курсна листа и брза услуга за менување девизи",
+      "en": "Exchange rates and fast foreign currency service"
+    },
+    "daily_info": {
+      "mk": "Курсна листа за 18.04.2026",
+      "en": "Exchange rates for 18.04.2026"
+    },
+    "working_hours": {
+      "mk": "Понеделник - Сабота: 09 до 16 часот",
+      "en": "Monday - Saturday : 09:00 to 16:00"
+    },
+    "phones": [
+      "075 573 000",
+      "025 297 870"
+    ],
+    "address": "ul. Hristo Tatarchev 33a, Skopje 1000",
+    "map_embed_url": "https://www.google.com/maps?q=ul.+Hristo+Tatarchev+33a,+Skopje+1000&output=embed",
+    "viber_link": "viber://chat?number=%2B38975573000",
+    "whatsapp_link": "https://wa.me/38975573000"
+  },
+  "notes": {
+    "mk": [
+      "ggg",
+      "ggg",
+      "ggg"
+    ],
+    "en": [
+      "ggg",
+      "ggg",
+      "ggg"
+    ]
+  },
+  "currencies": [
+    {
+      "code": "EUR",
+      "name": {
+        "mk": "Евро",
+        "en": "Euro"
+      },
+      "buy": "61.45",
+      "sell": "61.75",
+      "flag": "ЕУ",
+      "flag_image": "images/flags/eur.svg"
+    },
+    {
+      "code": "USD",
+      "name": {
+        "mk": "Американски долар",
+        "en": "US Dollar"
+      },
+      "buy": "51.50",
+      "sell": "52.90",
+      "flag": "САД",
+      "flag_image": "images/flags/usd.svg"
+    },
+    {
+      "code": "GBP",
+      "name": {
+        "mk": "Британска фунта",
+        "en": "British Pound"
+      },
+      "buy": "70.00",
+      "sell": "71.50",
+      "flag": "ОК",
+      "flag_image": "images/flags/gbp.svg"
+    },
+    {
+      "code": "CHF",
+      "name": {
+        "mk": "Швајцарски франк",
+        "en": "Swiss Franc"
+      },
+      "buy": "66.20",
+      "sell": "67.70",
+      "flag": "CH",
+      "flag_image": "images/flags/chf.svg"
+    },
+    {
+      "code": "CAD",
+      "name": {
+        "mk": "Канадски долар",
+        "en": "Canadian Dollar"
+      },
+      "buy": "37.20",
+      "sell": "38.70",
+      "flag": "CA",
+      "flag_image": "images/flags/cad.svg"
+    },
+    {
+      "code": "AUD",
+      "name": {
+        "mk": "Австралиски долар",
+        "en": "Australian Dollar"
+      },
+      "buy": "36.50",
+      "sell": "38.00",
+      "flag": "AU",
+      "flag_image": "images/flags/aud.svg"
+    },
+    {
+      "code": "RSD",
+      "name": {
+        "mk": "Српски динар",
+        "en": "Serbian Dinar"
+      },
+      "buy": "0.50",
+      "sell": "0.54",
+      "flag": "RS",
+      "flag_image": "images/flags/rsd.svg"
+    },
+    {
+      "code": "BGN",
+      "name": {
+        "mk": "Бугарски лев",
+        "en": "Bulgarian Lev"
+      },
+      "buy": "28.00",
+      "sell": "0.00",
+      "flag": "BG",
+      "flag_image": "images/flags/bgn.svg"
+    },
+    {
+      "code": "TRY",
+      "name": {
+        "mk": "Турска лира",
+        "en": "Turkish Lira"
+      },
+      "buy": "1.00",
+      "sell": "1.90",
+      "flag": "TR",
+      "flag_image": "images/flags/try.svg"
+    },
+    {
+      "code": "ALB",
+      "name": {
+        "mk": "Албански лек",
+        "en": "Albanian Lek"
+      },
+      "buy": "0.55",
+      "sell": "0.65",
+      "flag": "AL",
+      "flag_image": "images/flags/alb.svg"
+    }
+  ],
+  "gallery": [
+    {
+      "type": "image",
+      "image": "images/gallery/menuva5.jpg",
+      "video_url": "",
+      "title": {
+        "mk": "Менувачница",
+        "en": "Exchange Office"
+      },
+      "description": {
+        "mk": "Фотографија од менувачницата.",
+        "en": "Photo of the exchange office."
+      }
+    },
+    {
+      "type": "image",
+      "image": "images/gallery/menuva1.jpg",
+      "video_url": "",
+      "title": {
+        "mk": "Услужен простор",
+        "en": "Service Area"
+      },
+      "description": {
+        "mk": "Фотографија од внатрешниот простор.",
+        "en": "Photo of the interior area."
+      }
+    },
+    {
+      "type": "image",
+      "image": "images/gallery/menuva4.jpg",
+      "video_url": "",
+      "title": {
+        "mk": "Локација",
+        "en": "Location"
+      },
+      "description": {
+        "mk": "Фотографија од објектот и околината.",
+        "en": "Photo of the office and surroundings."
+      }
+    },
+    {
+      "type": "image",
+      "image": "images/gallery/menuva.jpg",
+      "video_url": "",
+      "title": {
+        "mk": "Простор",
+        "en": "Office Space"
+      },
+      "description": {
+        "mk": "Дополнителен поглед од менувачницата.",
+        "en": "Additional view of the exchange office."
+      }
+    },
+    {
+      "type": "image",
+      "image": "images/gallery/menuva3.jpg",
+      "video_url": "",
+      "title": {
+        "mk": "Ентериер",
+        "en": "Interior"
+      },
+      "description": {
+        "mk": "Фотографија од ентериерот.",
+        "en": "Photo of the interior."
+      }
+    }
+  ],
+  "visitor_count": 16
+}

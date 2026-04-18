@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ text_for(site_data.business.name) }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="site-shell">
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-line"></div>
+
+    <header class="topbar" data-reveal>
+        <div class="brand-block">
+          <a href="{{ url_for('index') }}" class="brand-mark">
+            <span class="brand-orb"></span>
+            <span>
+              <strong>{{ text_for(site_data.business.name) }}</strong>
+            </span>
+          </a>
+          <div class="brand-status {% if business_status.is_open %}is-open{% else %}is-closed{% endif %}">
+            {{ ui.brand_open if business_status.is_open else ui.brand_closed }}
+          </div>
+        </div>
+
+        <button class="nav-toggle" type="button" aria-label="{{ ui.nav_menu }}" aria-expanded="false" aria-controls="mobile-nav" data-nav-toggle>
+          <span class="nav-toggle-line"></span>
+          {{ ui.nav_menu }}
+        </button>
+
+        <div class="header-tools">
+          <nav class="main-nav" id="mobile-nav" data-nav-menu>
+            <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}is-active{% endif %}">{{ ui.nav_home }}</a>
+            <a href="{{ url_for('lokacija') }}" class="{% if request.endpoint == 'lokacija' %}is-active{% endif %}">{{ ui.nav_location }}</a>
+            <a href="{{ url_for('galerija') }}" class="{% if request.endpoint == 'galerija' %}is-active{% endif %}">{{ ui.nav_gallery }}</a>
+            <a href="{{ url_for('login') }}" class="{% if request.endpoint in ['login', 'admin'] %}is-active{% endif %}">{{ ui.nav_admin }}</a>
+          </nav>
+
+          <div class="lang-switcher" aria-label="{{ ui.lang_label }}">
+            <a
+              href="{{ url_for('set_language', lang='mk', next=request.full_path.rstrip('?')) }}"
+              class="lang-link {% if current_lang == 'mk' %}is-active{% endif %}">
+              MK
+            </a>
+            <a
+              href="{{ url_for('set_language', lang='en', next=request.full_path.rstrip('?')) }}"
+              class="lang-link {% if current_lang == 'en' %}is-active{% endif %}">
+              EN
+            </a>
+          </div>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <section class="flash-wrap">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </section>
+      {% endif %}
+    {% endwith %}
+
+    <main class="{% block main_class %}{% endblock %}">
+      {% block content %}{% endblock %}
+    </main>
+
+    {% if request.endpoint not in ['login', 'admin'] %}
+    <div class="contact-dock" aria-label="{{ ui.contact_dock_label }}">
+      <a
+        href="{{ site_data.business.viber_link }}"
+        class="contact-float contact-float-viber"
+        aria-label="{{ ui.viber_label }}"
+        title="{{ ui.viber_label }}">
+        <span class="contact-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" focusable="false">
+            <path d="M15.9 4C9 4 5.3 8.4 5.3 14.8c0 3 1 5.5 3 7.5v5.6l5.4-3c.7.1 1.4.1 2.1.1 6.8 0 10.8-4.4 10.8-10.8C26.6 7.8 22.8 4 15.9 4zm6.1 13.8c-.3.8-1.7 1.5-2.4 1.6-.6.1-1.4.2-4.5-1.2-3.9-1.8-6.4-6-6.6-6.2-.2-.3-1.6-2.1-1.6-4s1-2.8 1.4-3.2c.3-.3.8-.5 1.1-.5h.8c.3 0 .7-.1 1 .6.4.8 1.2 2.8 1.3 3 .1.2.2.5 0 .8-.2.3-.3.5-.6.8-.3.3-.5.6-.7.8-.2.2-.4.5-.2.9.2.4 1 1.7 2.1 2.7 1.5 1.3 2.8 1.8 3.2 2 .4.2.7.2 1-.1.3-.3 1.1-1.3 1.3-1.8.3-.4.5-.4.9-.2.4.1 2.5 1.2 2.9 1.4.4.2.7.3.8.5.1.1.1.8-.2 1.6z"/>
+          </svg>
+        </span>
+        <span class="contact-text">{{ ui.viber_label }}</span>
+      </a>
+
+      <a
+        href="{{ site_data.business.whatsapp_link }}"
+        class="contact-float contact-float-whatsapp"
+        aria-label="{{ ui.whatsapp_label }}"
+        title="{{ ui.whatsapp_label }}"
+        target="_blank"
+        rel="noopener noreferrer">
+        <span class="contact-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" focusable="false">
+            <path d="M16 4.8c-6.2 0-11.2 4.9-11.2 10.9 0 1.9.5 3.8 1.5 5.4l-1.6 5.8 6-1.6c1.6.9 3.4 1.4 5.3 1.4 6.2 0 11.2-4.9 11.2-10.9S22.2 4.8 16 4.8zm5.9 15.1c-.3.7-1.5 1.3-2.1 1.4-.6.1-1.3.2-3.7-.8-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.3 0-1.6.8-2.4 1.1-2.7.3-.2.6-.3.8-.3h.6c.2 0 .5 0 .7.5.3.6.9 2.2 1 2.4.1.2.1.4 0 .6-.1.2-.2.4-.5.7-.2.3-.4.4-.6.7-.2.2-.3.4-.1.7.2.3.8 1.4 1.8 2.2 1.2 1 2.2 1.4 2.5 1.6.3.1.5.1.7-.1.2-.2.8-1 1-1.3.2-.3.4-.3.7-.2.3.1 2 .9 2.3 1.1.3.1.6.2.6.4.1.2.1.7-.2 1.2z"/>
+          </svg>
+        </span>
+        <span class="contact-text">{{ ui.whatsapp_label }}</span>
+      </a>
+    </div>
+    {% endif %}
+
+    <footer class="footer" data-reveal>
+      <div class="footer-brand">
+        <strong>{{ text_for(site_data.business.name) }}</strong>
+        <p>{{ ui.footer_text | replace('2007', '<span class="footer-year-accent">2007</span>') | safe }}</p>
+      </div>
+      <div class="footer-meta">
+        <div class="footer-rights-block">
+          <span class="footer-corp">© <span id="current-year"></span> {{ text_for(site_data.business.name) }}</span>
+          <span class="footer-sep" aria-hidden="true">·</span>
+          <span class="footer-rights-text">{{ ui.footer_rights }}</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

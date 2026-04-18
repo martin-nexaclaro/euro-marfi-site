@@ -1,0 +1,510 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ui.admin_page_title }} | {{ text_for(data.business.name) }}{% endblock %}
+{% block main_class %}main-centered-admin{% endblock %}
+
+{% block content %}
+<section class="form-page centered-page-layout admin-page-layout" data-centered-layout>
+  <div class="admin-shell" data-reveal>
+    <div class="admin-header">
+      <div class="admin-header-card">
+        <span class="eyebrow">{{ ui.admin_kicker }}</span>
+        <h1>{{ ui.admin_title }}</h1>
+        <p class="admin-subtitle">{{ ui.admin_subtitle_text }}</p>
+      </div>
+      <div class="admin-actions">
+        <a class="secondary-btn" href="{{ url_for('logout') }}">{{ ui.admin_logout }}</a>
+      </div>
+    </div>
+
+    <form method="post" class="admin-form" enctype="multipart/form-data">
+      <input type="hidden" name="form_action" value="save_content">
+
+      <div class="admin-grid">
+        <section class="form-card">
+          <div class="form-card-header">
+            <h2>{{ ui.admin_basic_title }}</h2>
+            <span>{{ ui.admin_basic_text }}</span>
+          </div>
+          <div class="form-stack">
+            <label>
+              {{ ui.admin_daily_info_mk }}
+              <input type="text" name="daily_info_mk" value="{{ data.business.daily_info.mk }}" required>
+            </label>
+            <label>
+              {{ ui.admin_daily_info_en }}
+              <input type="text" name="daily_info_en" value="{{ data.business.daily_info.en }}" required>
+            </label>
+            <label>
+              {{ ui.admin_working_hours_mk }}
+              <input type="text" name="working_hours_mk" value="{{ data.business.working_hours.mk }}" required>
+            </label>
+            <label>
+              {{ ui.admin_working_hours_en }}
+              <input type="text" name="working_hours_en" value="{{ data.business.working_hours.en }}" required>
+            </label>
+            <label>
+              {{ ui.admin_phone_1 }}
+              <input type="text" name="phone_1" value="{{ data.business.phones[0] }}" required>
+            </label>
+            <label>
+              {{ ui.admin_phone_2 }}
+              <input type="text" name="phone_2" value="{{ data.business.phones[1] }}" required>
+            </label>
+            <label>
+              {{ ui.admin_address }}
+              <input type="text" name="address" value="{{ data.business.address }}" required>
+            </label>
+            <label>
+              {{ ui.admin_map_link }}
+              <input type="text" name="map_embed_url" value="{{ data.business.map_embed_url }}" required>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <div class="form-card-header">
+            <h2>{{ ui.admin_notes_title }}</h2>
+            <span>{{ ui.admin_notes_text }}</span>
+          </div>
+          <div class="form-stack">
+            <label>
+              {{ ui.admin_note_1_mk }}
+              <input type="text" name="note_1_mk" value="{{ data.notes.mk[0] }}" required>
+            </label>
+            <label>
+              {{ ui.admin_note_1_en }}
+              <input type="text" name="note_1_en" value="{{ data.notes.en[0] }}" required>
+            </label>
+            <label>
+              {{ ui.admin_note_2_mk }}
+              <input type="text" name="note_2_mk" value="{{ data.notes.mk[1] }}" required>
+            </label>
+            <label>
+              {{ ui.admin_note_2_en }}
+              <input type="text" name="note_2_en" value="{{ data.notes.en[1] }}" required>
+            </label>
+            <label>
+              {{ ui.admin_note_3_mk }}
+              <input type="text" name="note_3_mk" value="{{ data.notes.mk[2] }}" required>
+            </label>
+            <label>
+              {{ ui.admin_note_3_en }}
+              <input type="text" name="note_3_en" value="{{ data.notes.en[2] }}" required>
+            </label>
+          </div>
+        </section>
+      </div>
+
+      <section class="form-card" data-reveal>
+        <div class="form-card-header">
+          <h2>{{ ui.admin_rates_title }}</h2>
+          <span>{{ ui.admin_rates_text }}</span>
+        </div>
+        <div class="currency-admin-grid">
+          {% for currency in data.currencies %}
+          <div class="currency-editor">
+            <h3>{{ currency.code }}</h3>
+            <label>
+              {{ ui.admin_flag_label }}
+              <input type="text" name="flag_{{ currency.code }}" value="{{ currency.flag }}" required>
+            </label>
+            <label>
+              {{ ui.admin_buy_label }}
+              <input type="text" name="buy_{{ currency.code }}" value="{{ currency.buy }}" required>
+            </label>
+            <label>
+              {{ ui.admin_sell_label }}
+              <input type="text" name="sell_{{ currency.code }}" value="{{ currency.sell }}" required>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="form-card" data-reveal>
+        <div class="form-card-header">
+          <h2>Галерија</h2>
+          <span>Додајте, уредете или избришете слики и видеа. Зачувајте за да се применат промените.</span>
+        </div>
+        <div class="gallery-admin-grid" id="gallery-admin-grid">
+          {% for item in data.gallery %}
+          <div class="gallery-editor" id="gallery-editor-{{ loop.index }}">
+            <input type="hidden" name="gallery_delete_{{ loop.index }}" value="0" class="gallery-delete-flag">
+            <div class="gallery-editor-header">
+              <span class="gallery-editor-num">Ставка {{ loop.index }}</span>
+              <button type="button" class="gallery-delete-btn" onclick="deleteGalleryItem({{ loop.index }})">Избриши</button>
+            </div>
+            <div class="gallery-editor-type-row">
+              <label class="gallery-type-label">
+                Тип:
+                <select name="gallery_type_{{ loop.index }}" class="gallery-type-select" onchange="toggleGalleryType(this, 'gallery-editor-{{ loop.index }}')">
+                  <option value="image" {% if item.type != 'video' %}selected{% endif %}>Слика</option>
+                  <option value="video" {% if item.type == 'video' %}selected{% endif %}>Видео</option>
+                </select>
+              </label>
+            </div>
+            <div class="gallery-image-section" {% if item.type == 'video' %}style="display:none"{% endif %}>
+              <div class="gallery-editor-preview">
+                <img src="{{ url_for('static', filename=item.image) if item.image else '' }}"
+                     alt="{{ text_for(item.title) }}"
+                     id="gallery-preview-{{ loop.index }}"
+                     {% if not item.image %}style="display:none"{% endif %}>
+              </div>
+              <label>
+                Замени слика
+                <input type="file" name="gallery_image_{{ loop.index }}" accept="image/*"
+                       onchange="previewImage(this, 'gallery-preview-{{ loop.index }}')">
+              </label>
+            </div>
+            <div class="gallery-video-section" {% if item.type != 'video' %}style="display:none"{% endif %}>
+              <label>
+                Прикачи видео од компјутер
+                <input type="file" name="gallery_video_{{ loop.index }}" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,.mp4,.webm,.mov,.avi,.mkv">
+              </label>
+              {% if item.video_url %}
+              <div class="gallery-video-current">
+                <span class="gallery-video-current-label">Тековно видео:</span>
+                {% if item.video_url.startswith('http') %}
+                <span class="gallery-video-current-path">{{ item.video_url }}</span>
+                {% else %}
+                <span class="gallery-video-current-path">{{ item.video_url }} (локална датотека)</span>
+                {% endif %}
+              </div>
+              {% endif %}
+              <label class="gallery-url-label">
+                Или внеси URL (YouTube, Vimeo…)
+                <input type="url" name="gallery_video_url_{{ loop.index }}"
+                       value="{{ item.video_url or '' }}" placeholder="https://...">
+              </label>
+            </div>
+            <div class="form-stack">
+              <label>
+                Наслов {{ loop.index }} MK
+                <input type="text" name="gallery_title_{{ loop.index }}_mk" value="{{ item.title.mk }}">
+              </label>
+              <label>
+                Наслов {{ loop.index }} EN
+                <input type="text" name="gallery_title_{{ loop.index }}_en" value="{{ item.title.en }}">
+              </label>
+              <label>
+                Опис {{ loop.index }} MK
+                <textarea name="gallery_description_{{ loop.index }}_mk" rows="3">{{ item.description.mk }}</textarea>
+              </label>
+              <label>
+                Опис {{ loop.index }} EN
+                <textarea name="gallery_description_{{ loop.index }}_en" rows="3">{{ item.description.en }}</textarea>
+              </label>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <input type="hidden" id="gallery-new-count" name="gallery_new_count" value="0">
+        <div id="gallery-new-items"></div>
+        <div class="gallery-add-wrap">
+          <button type="button" class="secondary-btn" onclick="addGalleryItem()">+ Додади нова ставка</button>
+        </div>
+      </section>
+
+      <script>
+        function deleteGalleryItem(index) {
+          const editor = document.getElementById('gallery-editor-' + index);
+          const flag = editor.querySelector('.gallery-delete-flag');
+          flag.value = '1';
+          editor.querySelectorAll('input:not(.gallery-delete-flag), textarea, select').forEach(el => {
+            el.disabled = true;
+          });
+          editor.classList.add('gallery-editor-deleted');
+        }
+
+        function toggleGalleryType(select, editorId) {
+          const editor = document.getElementById(editorId);
+          const imageSection = editor.querySelector('.gallery-image-section');
+          const videoSection = editor.querySelector('.gallery-video-section');
+          if (select.value === 'video') {
+            imageSection.style.display = 'none';
+            videoSection.style.display = '';
+          } else {
+            imageSection.style.display = '';
+            videoSection.style.display = 'none';
+          }
+        }
+
+        function previewImage(input, previewId) {
+          const preview = document.getElementById(previewId);
+          if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => { preview.src = e.target.result; preview.style.display = ''; };
+            reader.readAsDataURL(input.files[0]);
+          }
+        }
+
+        let newItemCount = 0;
+        function addGalleryItem() {
+          newItemCount++;
+          document.getElementById('gallery-new-count').value = newItemCount;
+          const n = newItemCount;
+          const container = document.getElementById('gallery-new-items');
+          const div = document.createElement('div');
+          div.className = 'gallery-editor gallery-editor-new';
+          div.id = 'gallery-new-editor-' + n;
+          div.innerHTML = `
+            <input type="hidden" name="gallery_new_${n}_skip" value="0" class="gallery-new-skip-flag">
+            <div class="gallery-editor-header">
+              <span class="gallery-editor-num">Нова ставка ${n}</span>
+              <button type="button" class="gallery-delete-btn" onclick="removeNewItem(${n})">Отстрани</button>
+            </div>
+            <div class="gallery-editor-type-row">
+              <label class="gallery-type-label">
+                Тип:
+                <select name="gallery_new_${n}_type" class="gallery-type-select" onchange="toggleNewType(this, ${n})">
+                  <option value="image">Слика</option>
+                  <option value="video">Видео</option>
+                </select>
+              </label>
+            </div>
+            <div class="gallery-image-section" id="gallery-new-img-${n}">
+              <div class="gallery-editor-preview">
+                <img src="" alt="" id="gallery-new-preview-${n}" style="display:none; width:100%; height:100%; object-fit:cover;">
+              </div>
+              <label>
+                Слика
+                <input type="file" name="gallery_new_${n}_image" accept="image/*"
+                       onchange="previewImage(this, 'gallery-new-preview-${n}')">
+              </label>
+            </div>
+            <div class="gallery-video-section" id="gallery-new-vid-${n}" style="display:none">
+              <label>
+                Прикачи видео од компјутер
+                <input type="file" name="gallery_new_${n}_video" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,.mp4,.webm,.mov,.avi,.mkv">
+              </label>
+              <label class="gallery-url-label">
+                Или внеси URL (YouTube, Vimeo…)
+                <input type="url" name="gallery_new_${n}_video_url" placeholder="https://...">
+              </label>
+            </div>
+            <div class="form-stack">
+              <label>Наслов MK<input type="text" name="gallery_new_${n}_title_mk"></label>
+              <label>Наслов EN<input type="text" name="gallery_new_${n}_title_en"></label>
+              <label>Опис MK<textarea name="gallery_new_${n}_description_mk" rows="3"></textarea></label>
+              <label>Опис EN<textarea name="gallery_new_${n}_description_en" rows="3"></textarea></label>
+            </div>`;
+          container.appendChild(div);
+        }
+
+        function removeNewItem(n) {
+          const editor = document.getElementById('gallery-new-editor-' + n);
+          if (!editor) return;
+          editor.querySelector('.gallery-new-skip-flag').value = '1';
+          editor.querySelectorAll('input:not(.gallery-new-skip-flag), textarea, select').forEach(el => el.disabled = true);
+          editor.classList.add('gallery-editor-deleted');
+        }
+
+        function toggleNewType(select, n) {
+          const imgSection = document.getElementById('gallery-new-img-' + n);
+          const vidSection = document.getElementById('gallery-new-vid-' + n);
+          if (select.value === 'video') {
+            imgSection.style.display = 'none';
+            vidSection.style.display = '';
+          } else {
+            imgSection.style.display = '';
+            vidSection.style.display = 'none';
+          }
+        }
+      </script>
+
+      <div class="form-submit">
+        <button type="submit" class="primary-btn">{{ ui.admin_save_changes }}</button>
+      </div>
+    </form>
+
+    <section class="admin-security" data-reveal>
+      <div class="admin-security-heading">
+        <span class="eyebrow">Security</span>
+        <h2>Безбедност на админ најава</h2>
+        <p>Лозинката се чува како hash, а 2FA може да се вклучи преку Authenticator апликација.</p>
+      </div>
+
+      <div class="admin-grid admin-security-grid">
+        <section class="form-card">
+          <div class="form-card-header">
+            <h2>Промена на лозинка</h2>
+            <span>Промената веднаш важи за следната најава.</span>
+          </div>
+          <form method="post" class="admin-form">
+            <input type="hidden" name="form_action" value="change_password">
+            <div class="form-stack">
+              <label>
+                Тековна лозинка
+                <div class="password-field">
+                  <input type="password" name="current_password" autocomplete="current-password" required data-password-input>
+                  <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false">
+                    <span class="password-toggle-show" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6-9.8-6Z"/>
+                        <circle cx="12" cy="12" r="3.2"/>
+                      </svg>
+                    </span>
+                    <span class="password-toggle-hide" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M3 4.2 20 21"/>
+                        <path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.3 0 9.8 6 9.8 6a16.7 16.7 0 0 1-3.2 3.8"/>
+                        <path d="M6.7 7.6C4.1 9.3 2.2 12 2.2 12s3.5 6 9.8 6c1.7 0 3.2-.4 4.5-1"/>
+                        <path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2"/>
+                      </svg>
+                    </span>
+                  </button>
+                </div>
+              </label>
+              <label>
+                Нова лозинка
+                <div class="password-field">
+                  <input type="password" name="new_password" autocomplete="new-password" required data-password-input>
+                  <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false">
+                    <span class="password-toggle-show" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6-9.8-6Z"/>
+                        <circle cx="12" cy="12" r="3.2"/>
+                      </svg>
+                    </span>
+                    <span class="password-toggle-hide" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M3 4.2 20 21"/>
+                        <path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.3 0 9.8 6 9.8 6a16.7 16.7 0 0 1-3.2 3.8"/>
+                        <path d="M6.7 7.6C4.1 9.3 2.2 12 2.2 12s3.5 6 9.8 6c1.7 0 3.2-.4 4.5-1"/>
+                        <path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2"/>
+                      </svg>
+                    </span>
+                  </button>
+                </div>
+              </label>
+              <label>
+                Потврди нова лозинка
+                <div class="password-field">
+                  <input type="password" name="confirm_password" autocomplete="new-password" required data-password-input>
+                  <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false">
+                    <span class="password-toggle-show" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6-9.8-6Z"/>
+                        <circle cx="12" cy="12" r="3.2"/>
+                      </svg>
+                    </span>
+                    <span class="password-toggle-hide" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M3 4.2 20 21"/>
+                        <path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.3 0 9.8 6 9.8 6a16.7 16.7 0 0 1-3.2 3.8"/>
+                        <path d="M6.7 7.6C4.1 9.3 2.2 12 2.2 12s3.5 6 9.8 6c1.7 0 3.2-.4 4.5-1"/>
+                        <path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2"/>
+                      </svg>
+                    </span>
+                  </button>
+                </div>
+              </label>
+            </div>
+            <div class="form-submit">
+              <button type="submit" class="primary-btn">Промени лозинка</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="form-card">
+          <div class="form-card-header">
+            <h2>Two-Factor Authentication</h2>
+            <span>
+              {% if admin_settings.totp_enabled %}
+              2FA е вклучена.
+              {% else %}
+              Скенирајте QR код и потврдете со 6-цифрен код.
+              {% endif %}
+            </span>
+          </div>
+
+          {% if admin_settings.totp_enabled %}
+          <div class="security-status-card is-enabled">
+            <strong>2FA статус: Активна</strong>
+            <p>При секоја најава покрај лозинката ќе се бара и код од Authenticator апликацијата.</p>
+          </div>
+          <form method="post" class="admin-form">
+            <input type="hidden" name="form_action" value="disable_2fa">
+            <div class="form-stack">
+              <label>
+                Потврди со тековна лозинка
+                <div class="password-field">
+                  <input type="password" name="disable_2fa_password" autocomplete="current-password" required data-password-input>
+                  <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false">
+                    <span class="password-toggle-show" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6-9.8-6Z"/>
+                        <circle cx="12" cy="12" r="3.2"/>
+                      </svg>
+                    </span>
+                    <span class="password-toggle-hide" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M3 4.2 20 21"/>
+                        <path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.3 0 9.8 6 9.8 6a16.7 16.7 0 0 1-3.2 3.8"/>
+                        <path d="M6.7 7.6C4.1 9.3 2.2 12 2.2 12s3.5 6 9.8 6c1.7 0 3.2-.4 4.5-1"/>
+                        <path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2"/>
+                      </svg>
+                    </span>
+                  </button>
+                </div>
+              </label>
+            </div>
+            <div class="form-submit">
+              <button type="submit" class="secondary-btn danger-btn">Исклучи 2FA</button>
+            </div>
+          </form>
+          {% else %}
+          <div class="totp-setup-card">
+            <div class="totp-qr-shell">{{ totp_qr_svg | safe }}</div>
+            <div class="totp-setup-copy">
+              <p>Скенирајте го QR кодот со Google Authenticator, Microsoft Authenticator или слична апликација.</p>
+              <div class="totp-secret-box">
+                <span>Setup secret</span>
+                <strong>{{ totp_setup_secret }}</strong>
+              </div>
+              <a href="{{ totp_setup_uri }}" class="totp-uri-link">Отвори setup link</a>
+            </div>
+          </div>
+
+          <form method="post" class="admin-form">
+            <input type="hidden" name="form_action" value="enable_2fa">
+            <div class="form-stack">
+              <label>
+                Потврди со тековна лозинка
+                <div class="password-field">
+                  <input type="password" name="enable_2fa_password" autocomplete="current-password" required data-password-input>
+                  <button type="button" class="password-toggle" data-password-toggle aria-label="Show password" aria-pressed="false">
+                    <span class="password-toggle-show" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6-9.8-6Z"/>
+                        <circle cx="12" cy="12" r="3.2"/>
+                      </svg>
+                    </span>
+                    <span class="password-toggle-hide" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M3 4.2 20 21"/>
+                        <path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.3 0 9.8 6 9.8 6a16.7 16.7 0 0 1-3.2 3.8"/>
+                        <path d="M6.7 7.6C4.1 9.3 2.2 12 2.2 12s3.5 6 9.8 6c1.7 0 3.2-.4 4.5-1"/>
+                        <path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2"/>
+                      </svg>
+                    </span>
+                  </button>
+                </div>
+              </label>
+              <label>
+                2FA код од апликацијата
+                <input type="text" name="enable_2fa_code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" required>
+              </label>
+            </div>
+            <div class="form-submit">
+              <button type="submit" class="primary-btn">Активирај 2FA</button>
+            </div>
+          </form>
+          {% endif %}
+        </section>
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}

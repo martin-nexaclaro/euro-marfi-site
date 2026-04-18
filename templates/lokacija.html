@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ui.location_page_title }} | {{ text_for(data.business.name) }}{% endblock %}
+
+{% block content %}
+<section class="content-page location-page-layout centered-page-layout" data-centered-layout>
+  <div class="location-grid" data-reveal>
+    <article class="info-card location-contact-card">
+      <span class="eyebrow">{{ ui.contact_eyebrow }}</span>
+      <div class="contact-phone-list">
+        {% for phone in data.business.phones %}
+        <a class="call-button" href="tel:{{ phone | replace(' ', '') }}">
+          <span class="call-button-icon" aria-hidden="true">
+            <span class="call-button-icon-ring"></span>
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M6.8 4.6c.4-.4 1-.6 1.6-.4l2.1.7c.7.2 1.1.9 1 1.6l-.2 2.3c0 .4.1.7.4 1 .8 1 1.8 2 2.8 2.8.3.3.7.4 1 .4l2.3-.2c.7-.1 1.4.3 1.6 1l.7 2.1c.2.6 0 1.2-.4 1.6l-1.5 1.5c-.7.7-1.7 1-2.7.8-2.8-.7-5.3-2.2-7.4-4.3-2.1-2.1-3.6-4.6-4.3-7.4-.2-1 .1-2 .8-2.7l1.5-1.5z"/>
+              <path d="M15.8 6.8c1.2.2 2.4.8 3.3 1.8.9.9 1.6 2.1 1.8 3.3"/>
+              <path d="M15.9 9.5c.6.1 1.2.4 1.7.9.5.5.8 1.1.9 1.7"/>
+            </svg>
+          </span>
+          <span class="call-button-body">
+            <span class="call-button-label">{{ ui.call_label }}</span>
+            <strong>{{ phone }}</strong>
+          </span>
+        </a>
+        {% endfor %}
+      </div>
+      <a class="address-box" href="https://www.google.com/maps?q={{ data.business.address | replace(' ', '+') }}" target="_blank" rel="noopener noreferrer">
+        <strong>{{ data.business.address }}</strong>
+      </a>
+    </article>
+
+    <article class="map-card">
+      <iframe
+        src="{{ data.business.map_embed_url }}"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        allowfullscreen
+        title="{{ ui.map_title }}"></iframe>
+    </article>
+  </div>
+</section>
+{% endblock %}
