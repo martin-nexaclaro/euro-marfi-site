@@ -2121,6 +2121,7 @@ textarea:focus {
     width: 100%;
     border-radius: 16px;
     padding: 12px 14px;
+    text-align: center;
   }
 
   .rates-topbar {
