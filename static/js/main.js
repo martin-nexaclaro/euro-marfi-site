@@ -129,6 +129,67 @@ if (centeredLayouts.length > 0) {
   syncCenteredLayoutHeight();
 }
 
+const contactDock = document.querySelector(".contact-dock");
+const contactDockAnchor = document.querySelector(".contact-dock-anchor");
+const siteShell = document.querySelector(".site-shell");
+const pageFooter = document.querySelector(".footer");
+
+if (contactDock && contactDockAnchor && siteShell && pageFooter) {
+  const mobileBreakpoint = 820;
+  let dockSyncFrame = null;
+
+  const resetContactDockBelowFooter = () => {
+    contactDock.classList.remove("contact-dock--below-footer");
+    siteShell.classList.remove("contact-dock-is-below-footer");
+    siteShell.style.removeProperty("--contact-dock-anchor-top");
+  };
+
+  const syncContactDock = () => {
+    dockSyncFrame = null;
+
+    const dockHeight = Math.ceil(contactDock.getBoundingClientRect().height);
+    const dockStyles = window.getComputedStyle(contactDock);
+    const dockGap = parseFloat(
+      dockStyles.getPropertyValue("--contact-dock-mobile-gap")
+    ) || 0;
+
+    siteShell.style.setProperty("--contact-dock-height", `${dockHeight}px`);
+    siteShell.style.setProperty("--contact-dock-mobile-gap", `${dockGap}px`);
+
+    if (window.innerWidth > mobileBreakpoint) {
+      resetContactDockBelowFooter();
+      return;
+    }
+
+    const footerRect = pageFooter.getBoundingClientRect();
+    const dockThreshold = window.innerHeight - dockHeight - dockGap;
+    const shouldMoveBelowFooter = footerRect.top <= dockThreshold;
+
+    if (!shouldMoveBelowFooter) {
+      resetContactDockBelowFooter();
+      return;
+    }
+
+    siteShell.style.setProperty(
+      "--contact-dock-anchor-top",
+      `${contactDockAnchor.offsetTop}px`
+    );
+    siteShell.classList.add("contact-dock-is-below-footer");
+    contactDock.classList.add("contact-dock--below-footer");
+  };
+
+  const scheduleContactDockSync = () => {
+    if (dockSyncFrame !== null) return;
+    dockSyncFrame = window.requestAnimationFrame(syncContactDock);
+  };
+
+  window.addEventListener("load", scheduleContactDockSync);
+  window.addEventListener("resize", scheduleContactDockSync);
+  window.addEventListener("orientationchange", scheduleContactDockSync);
+  window.addEventListener("scroll", scheduleContactDockSync, { passive: true });
+  scheduleContactDockSync();
+}
+
 document.querySelectorAll("[data-gallery-slider]").forEach((slider) => {
   const slides = Array.from(slider.querySelectorAll("[data-gallery-slide]"));
   const copies = Array.from(slider.querySelectorAll("[data-gallery-copy]"));

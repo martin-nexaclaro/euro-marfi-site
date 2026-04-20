@@ -71,7 +71,7 @@
     </main>
 
     {% if request.endpoint not in ['login', 'admin'] %}
-    <div class="contact-dock" aria-label="{{ ui.contact_dock_label }}">
+    <div class="contact-dock {% if request.endpoint == 'index' %}contact-dock-home{% endif %}" aria-label="{{ ui.contact_dock_label }}">
       <a
         href="{{ site_data.business.viber_link }}"
         class="contact-float contact-float-viber"
@@ -115,6 +115,9 @@
         </div>
       </div>
     </footer>
+    {% if request.endpoint not in ['login', 'admin'] %}
+    <div class="contact-dock-anchor" aria-hidden="true"></div>
+    {% endif %}
   </div>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
