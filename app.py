@@ -2,6 +2,7 @@
 
 import io
 import json
+import os
 import re
 import uuid
 from copy import deepcopy
@@ -16,7 +17,7 @@ except ImportError :
 
 import pyotp 
 import qrcode 
-from flask import Flask ,flash ,redirect ,render_template ,request ,session ,url_for 
+from flask import Flask ,Response ,flash ,redirect ,render_template ,request ,session ,url_for 
 from qrcode .image .svg import SvgPathImage 
 from werkzeug.security import check_password_hash ,generate_password_hash
 from werkzeug.utils import secure_filename
@@ -38,6 +39,11 @@ VIDEO_DIR =BASE_DIR /"static"/"videos"
 SUPPORTED_LANGUAGES =("mk","en")
 _GALLERY_ALLOWED_EXTENSIONS ={"jpg","jpeg","png","webp","gif"}
 _VIDEO_ALLOWED_EXTENSIONS ={"mp4","webm","mov","avi","mkv"}
+PUBLIC_SITEMAP_PAGES =(
+("index","weekly","1.0"),
+("lokacija","monthly","0.8"),
+("galerija","monthly","0.7"),
+)
 
 try :
     SKOPJE_TZ =ZoneInfo ("Europe/Skopje")if ZoneInfo else None 
@@ -774,6 +780,55 @@ def lokacija ():
 @app .route ("/galerija")
 def galerija ():
     return render_template ("galerija.html",data =load_data ())
+
+
+def get_public_base_url ():
+    configured_url =os .environ .get ("SITE_URL","").strip ().rstrip ("/")
+    if configured_url :
+        return configured_url 
+
+    forwarded_proto =request .headers .get ("X-Forwarded-Proto",request .scheme ).split (",")[0 ].strip ()
+    forwarded_host =request .headers .get ("X-Forwarded-Host",request .host ).split (",")[0 ].strip ()
+    return f"{forwarded_proto}://{forwarded_host}".rstrip ("/")
+
+
+@app .route ("/sitemap.xml")
+def sitemap_xml ():
+    last_modified =datetime .now (SKOPJE_TZ ).date ().isoformat ()if SKOPJE_TZ else datetime .utcnow ().date ().isoformat ()
+    base_url =get_public_base_url ()
+    lines =[
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+
+    for endpoint ,change_frequency ,priority in PUBLIC_SITEMAP_PAGES :
+        lines .extend ([
+        "<url>",
+        f"<loc>{base_url}{url_for (endpoint )}</loc>",
+        f"<lastmod>{last_modified}</lastmod>",
+        f"<changefreq>{change_frequency}</changefreq>",
+        f"<priority>{priority}</priority>",
+        "</url>",
+        ])
+
+    lines .append ("</urlset>")
+    return Response ("\n".join (lines ),mimetype ="application/xml")
+
+
+@app .route ("/robots.txt")
+def robots_txt ():
+    lines =[
+    "User-agent: *",
+    "Allow: /",
+    "Disallow: /admin",
+    "Disallow: /login",
+    "Disallow: /logout",
+    "Disallow: /set-language/",
+    "",
+    f"Sitemap: {get_public_base_url ()}/sitemap.xml",
+    "",
+    ]
+    return Response ("\n".join (lines ),mimetype ="text/plain")
 
 
 @app .route ("/login",methods =["GET","POST"])
