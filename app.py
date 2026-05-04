@@ -831,6 +831,11 @@ def robots_txt ():
     return Response ("\n".join (lines ),mimetype ="text/plain")
 
 
+@app .route ("/favicon.ico")
+def favicon_ico ():
+    return redirect (url_for ("static",filename ="favicon.svg"),code =301 )
+
+
 @app .route ("/login",methods =["GET","POST"])
 def login ():
     admin_settings =load_admin_settings ()
