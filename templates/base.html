@@ -4,12 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ text_for(site_data.business.name) }}{% endblock %}</title>
+  <meta name="description" content="{{ page_meta.description }}">
+  <meta name="robots" content="{{ page_meta.robots }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:site_name" content="{{ text_for(site_data.business.name) }}">
+  <meta property="og:title" content="{{ page_meta.title }}">
+  <meta property="og:description" content="{{ page_meta.description }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:image" content="{{ page_meta.image_url }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_meta.title }}">
+  <meta name="twitter:description" content="{{ page_meta.description }}">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% if page_meta.robots == 'index, follow' %}
+  <script type="application/ld+json">{{ local_business_schema | tojson | safe }}</script>
+  {% endif %}
 </head>
 <body>
   <div class="site-shell">

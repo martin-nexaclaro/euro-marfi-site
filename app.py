@@ -8,6 +8,7 @@ import uuid
 from copy import deepcopy
 from datetime import datetime ,time
 from pathlib import Path
+from xml.sax.saxutils import escape as xml_escape
 
 try :
     from zoneinfo import ZoneInfo ,ZoneInfoNotFoundError 
@@ -23,7 +24,8 @@ from werkzeug.security import check_password_hash ,generate_password_hash
 from werkzeug.utils import secure_filename
 
 app =Flask (__name__ )
-app .config ["SECRET_KEY"]="change-this-secret-key-before-production"
+app .config ["SECRET_KEY"]=os .environ .get ("SECRET_KEY","change-this-secret-key-before-production")
+app .config ["PREFERRED_URL_SCHEME"]="https"
 
 # Change this starter username later for the real owner/admin login.
 # The password is now stored as a secure hash in data/admin_settings.json
@@ -44,6 +46,7 @@ PUBLIC_SITEMAP_PAGES =(
 ("lokacija","monthly","0.8"),
 ("galerija","monthly","0.7"),
 )
+NOINDEX_ENDPOINTS ={"login","admin","logout","set_language"}
 
 try :
     SKOPJE_TZ =ZoneInfo ("Europe/Skopje")if ZoneInfo else None 
@@ -748,12 +751,16 @@ def highlight_date_filter (value :str )->str :
 def inject_site_data ():
     current_lang =get_current_language ()
     site_data =load_data ()
+    page_meta =build_page_meta (site_data )
     return {
     "site_data":site_data ,
     "current_lang":current_lang ,
     "ui":UI_TEXT [current_lang ],
     "business_status":get_business_status (site_data ["business"]["working_hours"]),
     "text_for":lambda value :localized_value (value ,current_lang ),
+    "page_meta":page_meta ,
+    "canonical_url":page_meta ["canonical_url"],
+    "local_business_schema":build_local_business_schema (site_data ),
     }
 
 
@@ -792,9 +799,89 @@ def get_public_base_url ():
     return f"{forwarded_proto}://{forwarded_host}".rstrip ("/")
 
 
+def get_public_last_modified_date ():
+    paths =[
+    DATA_FILE ,
+    BASE_DIR /"templates"/"base.html",
+    BASE_DIR /"templates"/"index.html",
+    BASE_DIR /"templates"/"lokacija.html",
+    BASE_DIR /"templates"/"galerija.html",
+    BASE_DIR /"static"/"css"/"style.css",
+    BASE_DIR /"static"/"js"/"main.js",
+    ]
+    timestamps =[path .stat ().st_mtime for path in paths if path .exists ()]
+    if not timestamps :
+        return datetime .now (SKOPJE_TZ ).date ().isoformat ()if SKOPJE_TZ else datetime .utcnow ().date ().isoformat ()
+    return datetime .fromtimestamp (max (timestamps ),SKOPJE_TZ ).date ().isoformat ()if SKOPJE_TZ else datetime .utcfromtimestamp (max (timestamps )).date ().isoformat ()
+
+
+def build_canonical_url (endpoint :str |None =None ):
+    endpoint =endpoint or request .endpoint or "index"
+    public_endpoints ={item [0 ]for item in PUBLIC_SITEMAP_PAGES }
+    if endpoint not in public_endpoints :
+        endpoint ="index"
+    return f"{get_public_base_url ()}{url_for (endpoint )}"
+
+
+def build_page_meta (site_data :dict ):
+    endpoint =request .endpoint or "index"
+    current_lang =get_current_language ()
+    ui =UI_TEXT [current_lang ]
+    business_name =localized_value (site_data ["business"]["name"],current_lang )
+    tagline =localized_value (site_data ["business"].get ("tagline"),current_lang )
+
+    if endpoint =="lokacija":
+        title =f"{ui ['nav_location']} | {business_name}"
+        description =f"{business_name}: {site_data ['business']['address']}. {ui ['contact_text']}"
+    elif endpoint =="galerija":
+        title =f"{ui ['nav_gallery']} | {business_name}"
+        description =f"{business_name} gallery, location photos, exchange office service and MoneyGram information."
+    elif endpoint in NOINDEX_ENDPOINTS :
+        title =f"{ui .get ('nav_admin','Admin')} | {business_name}"
+        description ="Private administration page for the website owner."
+    else :
+        title =f"{ui ['rates_title']} | {business_name}"
+        description =f"{business_name}: {tagline}. {ui ['moneygram_text']}"
+
+    return {
+    "title":title ,
+    "description":description ,
+    "canonical_url":build_canonical_url (endpoint ),
+    "robots":"noindex, nofollow"if endpoint in NOINDEX_ENDPOINTS else "index, follow",
+    "image_url":f"{get_public_base_url ()}{url_for ('static',filename ='images/brands/moneygram-logo.png')}",
+    }
+
+
+def build_local_business_schema (site_data :dict ):
+    business =site_data ["business"]
+    name =localized_value (business ["name"],"mk")or localized_value (business ["name"],"en")
+    return {
+    "@context":"https://schema.org",
+    "@type":"FinancialService",
+    "name":name ,
+    "url":get_public_base_url (),
+    "telephone":business .get ("phones",[""])[0 ],
+    "address":{
+    "@type":"PostalAddress",
+    "streetAddress":business .get ("address",""),
+    "addressLocality":"Skopje",
+    "addressCountry":"MK",
+    },
+    "areaServed":"North Macedonia",
+    "currenciesAccepted":"MKD, EUR, USD, GBP, CHF",
+    }
+
+
+@app .after_request
+def apply_seo_headers (response ):
+    if request .endpoint in NOINDEX_ENDPOINTS :
+        response .headers ["X-Robots-Tag"]="noindex, nofollow"
+    return response
+
+
 @app .route ("/sitemap.xml")
 def sitemap_xml ():
-    last_modified =datetime .now (SKOPJE_TZ ).date ().isoformat ()if SKOPJE_TZ else datetime .utcnow ().date ().isoformat ()
+    last_modified =get_public_last_modified_date ()
     base_url =get_public_base_url ()
     lines =[
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -802,9 +889,10 @@ def sitemap_xml ():
     ]
 
     for endpoint ,change_frequency ,priority in PUBLIC_SITEMAP_PAGES :
+        page_url =f"{base_url}{url_for (endpoint )}"
         lines .extend ([
         "<url>",
-        f"<loc>{base_url}{url_for (endpoint )}</loc>",
+        f"<loc>{xml_escape (page_url )}</loc>",
         f"<lastmod>{last_modified}</lastmod>",
         f"<changefreq>{change_frequency}</changefreq>",
         f"<priority>{priority}</priority>",
@@ -812,7 +900,9 @@ def sitemap_xml ():
         ])
 
     lines .append ("</urlset>")
-    return Response ("\n".join (lines ),mimetype ="application/xml")
+    response =Response ("\n".join (lines ),mimetype ="application/xml")
+    response .headers ["Cache-Control"]="public, max-age=3600"
+    return response
 
 
 @app .route ("/robots.txt")
@@ -821,14 +911,15 @@ def robots_txt ():
     "User-agent: *",
     "Allow: /",
     "Disallow: /admin",
-    "Disallow: /login",
     "Disallow: /logout",
     "Disallow: /set-language/",
     "",
     f"Sitemap: {get_public_base_url ()}/sitemap.xml",
     "",
     ]
-    return Response ("\n".join (lines ),mimetype ="text/plain")
+    response =Response ("\n".join (lines ),mimetype ="text/plain")
+    response .headers ["Cache-Control"]="public, max-age=3600"
+    return response
 
 
 @app .route ("/favicon.ico")
