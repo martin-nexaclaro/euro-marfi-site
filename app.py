@@ -38,6 +38,7 @@ DATA_FILE =BASE_DIR /"data"/"site_data.json"
 ADMIN_SETTINGS_FILE =BASE_DIR /"data"/"admin_settings.json"
 GALLERY_DIR =BASE_DIR /"static"/"images"/"gallery"
 VIDEO_DIR =BASE_DIR /"static"/"videos"
+DEFAULT_SITE_URL ="https://menuvacnica.mk"
 SUPPORTED_LANGUAGES =("mk","en")
 _GALLERY_ALLOWED_EXTENSIONS ={"jpg","jpeg","png","webp","gif"}
 _VIDEO_ALLOWED_EXTENSIONS ={"mp4","webm","mov","avi","mkv"}
@@ -46,6 +47,19 @@ PUBLIC_SITEMAP_PAGES =(
 ("lokacija","monthly","0.8"),
 ("galerija","monthly","0.7"),
 )
+SEO_HOME_TITLE ={
+"mk":"Курсна Листа - Менувачница ЕУРО МАРФИ Скопје",
+"en":"Exchange Rates - EURO MARFI Exchange Office Skopje",
+}
+SEO_HOME_DESCRIPTION ={
+"mk":"ЕУРО МАРФИ е менувачница во Скопје со дневна курсна листа, куповен и продажен курс за EUR, USD, GBP, CHF и други валути.",
+"en":"EURO MARFI is an exchange office in Skopje with daily buy and sell exchange rates for EUR, USD, GBP, CHF and other currencies.",
+}
+SEO_GALLERY_DESCRIPTION ={
+"mk":"Фотографии од менувачницата ЕУРО МАРФИ, локацијата, ентериерот и услугата за менување девизи во Скопје.",
+"en":"Photos of EURO MARFI exchange office, location, interior, and foreign currency exchange service in Skopje.",
+}
+SEO_IMAGE_FILENAME ="images/gallery/menuva5.jpg"
 NOINDEX_ENDPOINTS ={"login","admin","logout","set_language"}
 
 try :
@@ -760,7 +774,7 @@ def inject_site_data ():
     "text_for":lambda value :localized_value (value ,current_lang ),
     "page_meta":page_meta ,
     "canonical_url":page_meta ["canonical_url"],
-    "local_business_schema":build_local_business_schema (site_data ),
+    "local_business_schema":build_local_business_schema (site_data ,page_meta ),
     }
 
 
@@ -770,6 +784,30 @@ def set_language (lang :str ):
         session ["lang"]=lang 
     next_url =request .args .get ("next")or url_for ("index")
     return redirect (next_url )
+
+
+@app .route ("/index.html")
+def legacy_index_html ():
+    return redirect (url_for ("index"),code =301 )
+
+
+@app .route ("/lokacija.html")
+def legacy_lokacija_html ():
+    return redirect (url_for ("lokacija"),code =301 )
+
+
+@app .route ("/sliki")
+@app .route ("/sliki.html")
+def legacy_sliki_html ():
+    return redirect (url_for ("galerija"),code =301 )
+
+
+@app .route ("/kursna-lista")
+@app .route ("/kursna-lista/")
+@app .route ("/курсна-листа")
+@app .route ("/курсна-листа/")
+def legacy_rates_page ():
+    return redirect (url_for ("index"),code =301 )
 
 
 @app .route ("/")
@@ -790,9 +828,9 @@ def galerija ():
 
 
 def get_public_base_url ():
-    configured_url =os .environ .get ("SITE_URL","").strip ().rstrip ("/")
+    configured_url =os .environ .get ("SITE_URL",DEFAULT_SITE_URL ).strip ().rstrip ("/")
     if configured_url :
-        return configured_url 
+        return configured_url
 
     forwarded_proto =request .headers .get ("X-Forwarded-Proto",request .scheme ).split (",")[0 ].strip ()
     forwarded_host =request .headers .get ("X-Forwarded-Host",request .host ).split (",")[0 ].strip ()
@@ -828,47 +866,119 @@ def build_page_meta (site_data :dict ):
     current_lang =get_current_language ()
     ui =UI_TEXT [current_lang ]
     business_name =localized_value (site_data ["business"]["name"],current_lang )
-    tagline =localized_value (site_data ["business"].get ("tagline"),current_lang )
 
     if endpoint =="lokacija":
         title =f"{ui ['nav_location']} | {business_name}"
         description =f"{business_name}: {site_data ['business']['address']}. {ui ['contact_text']}"
     elif endpoint =="galerija":
         title =f"{ui ['nav_gallery']} | {business_name}"
-        description =f"{business_name} gallery, location photos, exchange office service and MoneyGram information."
+        description =SEO_GALLERY_DESCRIPTION [current_lang ]
     elif endpoint in NOINDEX_ENDPOINTS :
         title =f"{ui .get ('nav_admin','Admin')} | {business_name}"
         description ="Private administration page for the website owner."
     else :
-        title =f"{ui ['rates_title']} | {business_name}"
-        description =f"{business_name}: {tagline}. {ui ['moneygram_text']}"
+        title =SEO_HOME_TITLE [current_lang ]
+        description =SEO_HOME_DESCRIPTION [current_lang ]
 
     return {
     "title":title ,
     "description":description ,
     "canonical_url":build_canonical_url (endpoint ),
-    "robots":"noindex, nofollow"if endpoint in NOINDEX_ENDPOINTS else "index, follow",
-    "image_url":f"{get_public_base_url ()}{url_for ('static',filename ='images/brands/moneygram-logo.png')}",
+    "robots":"noindex, nofollow"if endpoint in NOINDEX_ENDPOINTS else "index, follow, max-image-preview:large",
+    "image_url":f"{get_public_base_url ()}{url_for ('static',filename =SEO_IMAGE_FILENAME )}",
+    "image_alt":f"{business_name} - {ui ['rates_title']}",
+    "locale":"mk_MK"if current_lang =="mk"else "en_US",
+    "alternate_locale":"en_US"if current_lang =="mk"else "mk_MK",
     }
 
 
-def build_local_business_schema (site_data :dict ):
+def build_local_business_schema (site_data :dict ,page_meta :dict ):
+    current_lang =get_current_language ()
     business =site_data ["business"]
     name =localized_value (business ["name"],"mk")or localized_value (business ["name"],"en")
+    public_base_url =get_public_base_url ()
+    canonical_url =page_meta ["canonical_url"]
+    primary_phone =business .get ("phones",[""])[0 ]
+    all_phones =[phone for phone in business .get ("phones",[])if phone ]
+    currencies =[currency .get ("code","")for currency in site_data .get ("currencies",[])if currency .get ("code")]
+    description =page_meta ["description"]
     return {
     "@context":"https://schema.org",
+    "@graph":[
+    {
     "@type":"FinancialService",
+    "@id":f"{public_base_url}/#business",
     "name":name ,
-    "url":get_public_base_url (),
-    "telephone":business .get ("phones",[""])[0 ],
+    "alternateName":localized_value (business ["name"],"en"),
+    "description":SEO_HOME_DESCRIPTION ["mk"],
+    "url":public_base_url ,
+    "telephone":primary_phone ,
+    "contactPoint":[
+    {
+    "@type":"ContactPoint",
+    "telephone":phone ,
+    "contactType":"customer service",
+    "areaServed":"MK",
+    "availableLanguage":["mk","en"],
+    }for phone in all_phones
+    ],
+    "image":page_meta ["image_url"],
+    "logo":f"{public_base_url}{url_for ('static',filename ='favicon.svg')}",
+    "priceRange":"$",
     "address":{
     "@type":"PostalAddress",
-    "streetAddress":business .get ("address",""),
+    "streetAddress":"ul. Hristo Tatarchev 33a",
     "addressLocality":"Skopje",
+    "postalCode":"1000",
     "addressCountry":"MK",
     },
-    "areaServed":"North Macedonia",
-    "currenciesAccepted":"MKD, EUR, USD, GBP, CHF",
+    "geo":{
+    "@type":"GeoCoordinates",
+    "latitude":41.97798415915381,
+    "longitude":21.439950976565317,
+    },
+    "hasMap":"https://share.google/z7PZhCNkPWuyMizhk",
+    "areaServed":[
+    {"@type":"City","name":"Skopje"},
+    {"@type":"Country","name":"North Macedonia"},
+    ],
+    "currenciesAccepted":", ".join (["MKD"]+currencies ),
+    "paymentAccepted":"Cash",
+    "openingHours":"Mo-Sa 09:00-16:00",
+    "openingHoursSpecification":[
+    {
+    "@type":"OpeningHoursSpecification",
+    "dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+    "opens":"09:00",
+    "closes":"16:00",
+    }
+    ],
+    "knowsAbout":["Курсна листа","Менувачница","Куповен курс","Продажен курс","Foreign currency exchange"],
+    },
+    {
+    "@type":"WebSite",
+    "@id":f"{public_base_url}/#website",
+    "url":public_base_url ,
+    "name":name ,
+    "inLanguage":["mk","en"],
+    "publisher":{"@id":f"{public_base_url}/#business"},
+    },
+    {
+    "@type":"WebPage",
+    "@id":f"{canonical_url}#webpage",
+    "url":canonical_url ,
+    "name":page_meta ["title"],
+    "description":description ,
+    "inLanguage":current_lang ,
+    "isPartOf":{"@id":f"{public_base_url}/#website"},
+    "about":{"@id":f"{public_base_url}/#business"},
+    "primaryImageOfPage":{
+    "@type":"ImageObject",
+    "url":page_meta ["image_url"],
+    "caption":page_meta ["image_alt"],
+    },
+    },
+    ],
     }
 
 

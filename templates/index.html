@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ ui.nav_home }} | {{ text_for(data.business.name) }}{% endblock %}
+{% block title %}{{ page_meta.title }}{% endblock %}
 
 {% block content %}
 <section class="rates-section" data-reveal>
@@ -112,11 +112,4 @@
   </article>
 </section>
 
-<section class="moneygram-panel" data-reveal>
-  <img src="{{ url_for('static', filename='images/brands/moneygram-logo.png') }}" alt="MoneyGram logo" class="moneygram-logo">
-  <div class="moneygram-copy">
-    <h2>{{ ui.moneygram_title }}</h2>
-    <p>{{ ui.moneygram_text }}</p>
-  </div>
-</section>
 {% endblock %}

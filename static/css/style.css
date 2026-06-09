@@ -2554,6 +2554,12 @@ textarea:focus {
 }
 
 @media (max-width: 820px) {
+  .contact-dock {
+    --contact-dock-edge: clamp(22px, 7vw, 34px);
+    --contact-dock-size: clamp(50px, 14vw, 56px);
+    max-width: calc(100vw - (var(--contact-dock-edge) * 2));
+  }
+
   .site-shell.contact-dock-is-below-footer .contact-dock-anchor {
     height: calc(var(--contact-dock-height, 0px) + var(--contact-dock-mobile-gap, 18px));
   }
@@ -2565,13 +2571,17 @@ textarea:focus {
   }
 
   .contact-dock.contact-dock-home:not(.contact-dock--below-footer) {
+    position: fixed;
+    left: calc(100vw - var(--contact-dock-size) - var(--contact-dock-edge));
+    right: auto;
     width: auto;
     gap: 10px;
   }
 
   .contact-dock.contact-dock-home:not(.contact-dock--below-footer) .contact-float {
-    width: 56px;
-    min-height: 56px;
+    width: var(--contact-dock-size);
+    min-width: var(--contact-dock-size);
+    min-height: var(--contact-dock-size);
     padding: 0;
     justify-content: center;
   }
@@ -2590,5 +2600,18 @@ textarea:focus {
 
   .contact-dock.contact-dock-home:not(.contact-dock--below-footer) .contact-text {
     display: none;
+  }
+
+  .contact-dock.contact-dock-home.contact-dock--below-footer {
+    left: max(var(--contact-dock-edge), env(safe-area-inset-left));
+    right: max(var(--contact-dock-edge), env(safe-area-inset-right));
+    width: auto;
+  }
+
+  .contact-dock.contact-dock-home.contact-dock--below-footer .contact-float {
+    width: 100%;
+    min-height: 54px;
+    padding: 11px 14px;
+    justify-content: center;
   }
 }

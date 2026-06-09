@@ -3,26 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ text_for(site_data.business.name) }}{% endblock %}</title>
+  <title>{% block title %}{{ page_meta.title }}{% endblock %}</title>
   <meta name="description" content="{{ page_meta.description }}">
   <meta name="robots" content="{{ page_meta.robots }}">
+  <meta name="googlebot" content="{{ page_meta.robots }}">
   <link rel="canonical" href="{{ canonical_url }}">
   <meta property="og:site_name" content="{{ text_for(site_data.business.name) }}">
   <meta property="og:title" content="{{ page_meta.title }}">
   <meta property="og:description" content="{{ page_meta.description }}">
+  <meta property="og:locale" content="{{ page_meta.locale }}">
+  <meta property="og:locale:alternate" content="{{ page_meta.alternate_locale }}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ canonical_url }}">
   <meta property="og:image" content="{{ page_meta.image_url }}">
+  <meta property="og:image:alt" content="{{ page_meta.image_alt }}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ page_meta.title }}">
   <meta name="twitter:description" content="{{ page_meta.description }}">
+  <meta name="twitter:image" content="{{ page_meta.image_url }}">
+  <meta name="twitter:image:alt" content="{{ page_meta.image_alt }}">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  {% if page_meta.robots == 'index, follow' %}
+  {% if 'noindex' not in page_meta.robots %}
   <script type="application/ld+json">{{ local_business_schema | tojson | safe }}</script>
   {% endif %}
 </head>
@@ -102,20 +108,6 @@
         <span class="contact-text">{{ ui.viber_label }}</span>
       </a>
 
-      <a
-        href="{{ site_data.business.whatsapp_link }}"
-        class="contact-float contact-float-whatsapp"
-        aria-label="{{ ui.whatsapp_label }}"
-        title="{{ ui.whatsapp_label }}"
-        target="_blank"
-        rel="noopener noreferrer">
-        <span class="contact-icon" aria-hidden="true">
-          <svg viewBox="0 0 32 32" focusable="false">
-            <path d="M16 4.8c-6.2 0-11.2 4.9-11.2 10.9 0 1.9.5 3.8 1.5 5.4l-1.6 5.8 6-1.6c1.6.9 3.4 1.4 5.3 1.4 6.2 0 11.2-4.9 11.2-10.9S22.2 4.8 16 4.8zm5.9 15.1c-.3.7-1.5 1.3-2.1 1.4-.6.1-1.3.2-3.7-.8-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.3 0-1.6.8-2.4 1.1-2.7.3-.2.6-.3.8-.3h.6c.2 0 .5 0 .7.5.3.6.9 2.2 1 2.4.1.2.1.4 0 .6-.1.2-.2.4-.5.7-.2.3-.4.4-.6.7-.2.2-.3.4-.1.7.2.3.8 1.4 1.8 2.2 1.2 1 2.2 1.4 2.5 1.6.3.1.5.1.7-.1.2-.2.8-1 1-1.3.2-.3.4-.3.7-.2.3.1 2 .9 2.3 1.1.3.1.6.2.6.4.1.2.1.7-.2 1.2z"/>
-          </svg>
-        </span>
-        <span class="contact-text">{{ ui.whatsapp_label }}</span>
-      </a>
     </div>
     {% endif %}
 
