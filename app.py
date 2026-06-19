@@ -782,12 +782,13 @@ def get_business_status (working_hours )->dict :
 
 def increment_visitor_count ()->int :
     data =load_data ()
+    if supabase_is_configured ():
+        return int (data .get ("visitor_count",0 ))
     if not session .get ("visit_counted"):
         data ["visitor_count"]=int (data .get ("visitor_count",0 ))+1 
         save_data (data )
         session ["visit_counted"]=True 
-    return int (load_data ().get ("visitor_count",0 ))
-
+    return int (data .get ("visitor_count",0 ))
 
 def update_site_data_from_admin_form (data :dict ,form ,files =None )->dict :
     data ["business"]["daily_info"]={
@@ -1015,20 +1016,7 @@ def get_public_base_url ():
 
 
 def get_public_last_modified_date ():
-    paths =[
-    DATA_FILE ,
-    BASE_DIR /"templates"/"base.html",
-    BASE_DIR /"templates"/"index.html",
-    BASE_DIR /"templates"/"lokacija.html",
-    BASE_DIR /"templates"/"galerija.html",
-    BASE_DIR /"static"/"css"/"style.css",
-    BASE_DIR /"static"/"js"/"main.js",
-    ]
-    timestamps =[path .stat ().st_mtime for path in paths if path .exists ()]
-    if not timestamps :
-        return datetime .now (SKOPJE_TZ ).date ().isoformat ()if SKOPJE_TZ else datetime .utcnow ().date ().isoformat ()
-    return datetime .fromtimestamp (max (timestamps ),SKOPJE_TZ ).date ().isoformat ()if SKOPJE_TZ else datetime .utcfromtimestamp (max (timestamps )).date ().isoformat ()
-
+    return datetime .now (SKOPJE_TZ ).date ().isoformat ()if SKOPJE_TZ else datetime .utcnow ().date ().isoformat ()
 
 def build_public_page_url (endpoint :str )->str :
     if endpoint =="kursna_lista":
