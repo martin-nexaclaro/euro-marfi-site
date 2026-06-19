@@ -147,7 +147,7 @@ UI_TEXT ={
 "location_title":"Посетете нè",
 "location_link":"Отвори локација",
 "counter_eyebrow":"Посетители",
-"counter_text":"Бројач на посети продолжен од постоечката веб-страница.",
+"counter_text":"Бројач на посетители на веб-страната.",
 "location_page_title":"Локација",
 "address_label":"Адреса",
 "location_page_eyebrow":"Контакт и насока",
