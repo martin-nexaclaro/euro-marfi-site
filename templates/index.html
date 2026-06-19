@@ -129,7 +129,11 @@
 
   <article class="info-card counter-card">
     <span class="eyebrow">{{ ui.counter_eyebrow }}</span>
-    <div class="counter-value">{{ visitor_count }}</div>
+    <div class="counter-display" aria-label="{{ ui.counter_eyebrow }} {{ visitor_count }}">
+      <span class="counter-glow" aria-hidden="true"></span>
+      <div class="counter-value">{{ "{:,}".format(visitor_count).replace(",", " ") }}</div>
+    </div>
+    <p>{{ ui.counter_text }}</p>
   </article>
 </section>
 

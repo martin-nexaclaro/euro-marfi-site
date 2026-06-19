@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import io
 import json
@@ -720,8 +720,12 @@ def is_logged_in ()->bool :
 
 
 def get_current_language ()->str :
-    if request .endpoint and request .endpoint .startswith ("en_"):
+    endpoint =request .endpoint or ""
+    if endpoint .startswith ("en_"):
         return "en"
+    public_endpoints ={item [0 ]for item in PUBLIC_SITEMAP_PAGES }
+    if CANONICAL_ENDPOINTS .get (endpoint ,endpoint )in public_endpoints :
+        return "mk"
     lang =session .get ("lang","mk")
     return lang if lang in SUPPORTED_LANGUAGES else "mk"
 
