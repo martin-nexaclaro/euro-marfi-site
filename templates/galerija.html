@@ -17,10 +17,10 @@
         aria-hidden="{% if loop.first %}false{% else %}true{% endif %}">
         {% if item.type == 'video' and item.video_url %}
         <video class="gallery-video" muted loop playsinline {% if loop.first %}autoplay{% endif %}>
-          <source src="{% if item.video_url.startswith('http') %}{{ item.video_url }}{% else %}{{ url_for('static', filename=item.video_url) }}{% endif %}">
+          <source src="{{ public_media_url(item.video_url) }}">
         </video>
         {% else %}
-        <img src="{{ url_for('static', filename=item.image) }}" alt="{{ text_for(item.title) }}">
+        <img src="{{ public_media_url(item.image) }}" alt="{{ text_for(item.title) }}">
         {% endif %}
       </figure>
       {% endfor %}

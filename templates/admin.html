@@ -146,7 +146,7 @@
             </div>
             <div class="gallery-image-section" {% if item.type == 'video' %}style="display:none"{% endif %}>
               <div class="gallery-editor-preview">
-                <img src="{{ url_for('static', filename=item.image) if item.image else '' }}"
+                <img src="{{ public_media_url(item.image) if item.image else '' }}"
                      alt="{{ text_for(item.title) }}"
                      id="gallery-preview-{{ loop.index }}"
                      {% if not item.image %}style="display:none"{% endif %}>

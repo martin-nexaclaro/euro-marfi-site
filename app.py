@@ -8,6 +8,9 @@ import uuid
 from copy import deepcopy
 from datetime import datetime ,time
 from pathlib import Path
+from urllib.error import HTTPError ,URLError
+from urllib.parse import quote
+from urllib.request import Request ,urlopen
 from xml.sax.saxutils import escape as xml_escape
 
 try :
@@ -42,8 +45,18 @@ DEFAULT_SITE_URL ="https://menuvacnica.mk"
 SUPPORTED_LANGUAGES =("mk","en")
 _GALLERY_ALLOWED_EXTENSIONS ={"jpg","jpeg","png","webp","gif"}
 _VIDEO_ALLOWED_EXTENSIONS ={"mp4","webm","mov","avi","mkv"}
+SUPABASE_URL =os .environ .get ("SUPABASE_URL","").strip ().rstrip ("/")
+SUPABASE_KEY =(
+os .environ .get ("SUPABASE_SERVICE_ROLE_KEY","" ).strip ()
+or os .environ .get ("SUPABASE_ANON_KEY","").strip ()
+)
+SUPABASE_TABLE =os .environ .get ("SUPABASE_TABLE","site_settings" ).strip ()or "site_settings"
+SUPABASE_STORAGE_BUCKET =os .environ .get ("SUPABASE_STORAGE_BUCKET","site-media" ).strip ()
+SUPABASE_MEDIA_PREFIX =os .environ .get ("SUPABASE_MEDIA_PREFIX","uploads" ).strip ("/")
+SUPABASE_TIMEOUT =float (os .environ .get ("SUPABASE_TIMEOUT","8" )or 8)
 PUBLIC_SITEMAP_PAGES =(
 ("index","weekly","1.0"),
+("kursna_lista","daily","0.95"),
 ("lokacija","monthly","0.8"),
 ("galerija","monthly","0.7"),
 )
@@ -379,10 +392,118 @@ DEFAULT_DATA ={
 }
 
 
+def supabase_is_configured ()->bool :
+    return bool (SUPABASE_URL and SUPABASE_KEY )
+
+
+def supabase_headers (extra_headers :dict |None =None )->dict :
+    headers ={
+    "apikey":SUPABASE_KEY ,
+    "Authorization":f"Bearer {SUPABASE_KEY }",
+    }
+    if extra_headers :
+        headers .update (extra_headers )
+    return headers
+
+
+def supabase_request (method :str ,path :str ,payload =None ,headers :dict |None =None ,raw_body :bytes |None =None ):
+    if not supabase_is_configured ():
+        return None
+    url =f"{SUPABASE_URL }{path }"
+    body =raw_body
+    request_headers =supabase_headers (headers )
+    if payload is not None :
+        body =json .dumps (payload ).encode ("utf-8")
+        request_headers .setdefault ("Content-Type","application/json")
+    request_obj =Request (url ,data =body ,headers =request_headers ,method =method )
+    try :
+        with urlopen (request_obj ,timeout =SUPABASE_TIMEOUT )as response :
+            response_body =response .read ()
+            if not response_body :
+                return None
+            return json .loads (response_body .decode ("utf-8"))
+    except HTTPError as error :
+        detail =error .read ().decode ("utf-8","replace")
+        raise RuntimeError (f"Supabase request failed: {method } {path } -> {error .code } {detail }")from error
+    except URLError as error :
+        raise RuntimeError (f"Supabase request failed: {method } {path } -> {error }")from error
+
+
+def load_supabase_json (key :str ):
+    encoded_key =quote (key ,safe ="")
+    encoded_table =quote (SUPABASE_TABLE ,safe ="")
+    rows =supabase_request (
+    "GET",
+    f"/rest/v1/{encoded_table }?key=eq.{encoded_key }&select=value&limit=1",
+    headers ={"Accept":"application/json"},
+    )
+    if not rows :
+        return None
+    return rows [0 ].get ("value")
+
+
+def save_supabase_json (key :str ,value :dict )->None :
+    encoded_table =quote (SUPABASE_TABLE ,safe ="")
+    supabase_request (
+    "POST",
+    f"/rest/v1/{encoded_table }",
+    payload ={"key":key ,"value":value },
+    headers ={"Prefer":"resolution=merge-duplicates,return=minimal"},
+    )
+
+
+def load_local_json (path :Path ,default_value :dict )->dict :
+    path .parent .mkdir (parents =True ,exist_ok =True )
+    if not path .exists ():
+        with path .open ("w",encoding ="utf-8")as file :
+            json .dump (default_value ,file ,indent =2 ,ensure_ascii =False )
+    with path .open ("r",encoding ="utf-8")as file :
+        return json .load (file )
+
+
+def save_local_json (path :Path ,value :dict )->None :
+    path .parent .mkdir (parents =True ,exist_ok =True )
+    with path .open ("w",encoding ="utf-8")as file :
+        json .dump (value ,file ,indent =2 ,ensure_ascii =False )
+
+
+def upload_supabase_media (file_storage ,kind :str ,allowed_extensions :set [str ])->str :
+    original =secure_filename (file_storage .filename or "")
+    ext =original .rsplit (".",1 )[-1 ].lower ()if "."in original else ""
+    if ext not in allowed_extensions :
+        return ""
+    content =file_storage .read ()
+    if not content :
+        return ""
+    prefix =f"{SUPABASE_MEDIA_PREFIX }/"if SUPABASE_MEDIA_PREFIX else ""
+    object_path =f"{prefix }{kind }/{uuid .uuid4 ().hex }.{ext }"
+    encoded_bucket =quote (SUPABASE_STORAGE_BUCKET ,safe ="")
+    encoded_path =quote (object_path ,safe ="/")
+    content_type =file_storage .mimetype or "application/octet-stream"
+    supabase_request (
+    "POST",
+    f"/storage/v1/object/{encoded_bucket }/{encoded_path }",
+    headers ={"Content-Type":content_type ,"x-upsert":"true"},
+    raw_body =content,
+    )
+    return f"{SUPABASE_URL }/storage/v1/object/public/{encoded_bucket }/{encoded_path }"
+
+
+def public_media_url (path :str )->str :
+    if not path :
+        return ""
+    if path .startswith (("http://","https://","//")):
+        return path
+    return url_for ("static",filename =path )
 def ensure_data_file ()->None :
+    if supabase_is_configured ():
+        if load_supabase_json ("site_data")is None :
+            seed_data =load_local_json (DATA_FILE ,deepcopy (DEFAULT_DATA ))if DATA_FILE .exists ()else deepcopy (DEFAULT_DATA )
+            save_supabase_json ("site_data",seed_data )
+        return
     DATA_FILE .parent .mkdir (parents =True ,exist_ok =True )
     if not DATA_FILE .exists ():
-        save_data (deepcopy (DEFAULT_DATA ))
+        save_local_json (DATA_FILE ,deepcopy (DEFAULT_DATA ))
 
 
 def default_admin_settings ()->dict :
@@ -395,21 +516,29 @@ def default_admin_settings ()->dict :
 
 
 def save_admin_settings (settings :dict )->None :
-    ADMIN_SETTINGS_FILE .parent .mkdir (parents =True ,exist_ok =True )
-    with ADMIN_SETTINGS_FILE .open ("w",encoding ="utf-8")as file :
-        json .dump (settings ,file ,indent =2 ,ensure_ascii =False )
+    if supabase_is_configured ():
+        save_supabase_json ("admin_settings",settings )
+        return
+    save_local_json (ADMIN_SETTINGS_FILE ,settings )
 
 
 def ensure_admin_settings ()->None :
+    if supabase_is_configured ():
+        if load_supabase_json ("admin_settings")is None :
+            seed_settings =load_local_json (ADMIN_SETTINGS_FILE ,default_admin_settings ())if ADMIN_SETTINGS_FILE .exists ()else default_admin_settings ()
+            save_supabase_json ("admin_settings",seed_settings )
+        return
     ADMIN_SETTINGS_FILE .parent .mkdir (parents =True ,exist_ok =True )
     if not ADMIN_SETTINGS_FILE .exists ():
-        save_admin_settings (default_admin_settings ())
+        save_local_json (ADMIN_SETTINGS_FILE ,default_admin_settings ())
 
 
 def load_admin_settings ()->dict :
     ensure_admin_settings ()
-    with ADMIN_SETTINGS_FILE .open ("r",encoding ="utf-8")as file :
-        current_settings =json .load (file )
+    if supabase_is_configured ():
+        current_settings =load_supabase_json ("admin_settings")or default_admin_settings ()
+    else :
+        current_settings =load_local_json (ADMIN_SETTINGS_FILE ,default_admin_settings ())
 
     defaults =default_admin_settings ()
     settings ={
@@ -467,8 +596,10 @@ def normalize_localized_field (value ,default_value ):
 
 def load_data ()->dict :
     ensure_data_file ()
-    with DATA_FILE .open ("r",encoding ="utf-8")as file :
-        data =json .load (file )
+    if supabase_is_configured ():
+        data =load_supabase_json ("site_data")or deepcopy (DEFAULT_DATA )
+    else :
+        data =load_local_json (DATA_FILE ,deepcopy (DEFAULT_DATA ))
 
     data .setdefault ("business",{})
     for key ,default_value in DEFAULT_DATA ["business"].items ():
@@ -525,12 +656,15 @@ def load_data ()->dict :
 
 
 def save_data (data :dict )->None :
-    DATA_FILE .parent .mkdir (parents =True ,exist_ok =True )
-    with DATA_FILE .open ("w",encoding ="utf-8")as file :
-        json .dump (data ,file ,indent =2 ,ensure_ascii =False )
+    if supabase_is_configured ():
+        save_supabase_json ("site_data",data )
+        return
+    save_local_json (DATA_FILE ,data )
 
 
 def save_gallery_image (file_storage )->str :
+    if supabase_is_configured ()and SUPABASE_STORAGE_BUCKET :
+        return upload_supabase_media (file_storage ,"gallery",_GALLERY_ALLOWED_EXTENSIONS )
     original =secure_filename (file_storage .filename or "")
     ext =original .rsplit (".",1 )[-1 ].lower ()if "."in original else ""
     if ext not in _GALLERY_ALLOWED_EXTENSIONS :
@@ -542,6 +676,8 @@ def save_gallery_image (file_storage )->str :
 
 
 def save_gallery_video (file_storage )->str :
+    if supabase_is_configured ()and SUPABASE_STORAGE_BUCKET :
+        return upload_supabase_media (file_storage ,"videos",_VIDEO_ALLOWED_EXTENSIONS )
     original =secure_filename (file_storage .filename or "")
     ext =original .rsplit (".",1 )[-1 ].lower ()if "."in original else ""
     if ext not in _VIDEO_ALLOWED_EXTENSIONS :
@@ -772,6 +908,7 @@ def inject_site_data ():
     "ui":UI_TEXT [current_lang ],
     "business_status":get_business_status (site_data ["business"]["working_hours"]),
     "text_for":lambda value :localized_value (value ,current_lang ),
+    "public_media_url":public_media_url,
     "page_meta":page_meta ,
     "canonical_url":page_meta ["canonical_url"],
     "local_business_schema":build_local_business_schema (site_data ,page_meta ),
@@ -806,9 +943,45 @@ def legacy_sliki_html ():
 @app .route ("/kursna-lista/")
 @app .route ("/курсна-листа")
 @app .route ("/курсна-листа/")
-def legacy_rates_page ():
+def kursna_lista ():
+    visitor_count =increment_visitor_count ()
+    data =load_data ()
+    return render_template ("index.html",data =data ,visitor_count =visitor_count )
+
+
+@app .route ("/kontakt")
+@app .route ("/kontakt/")
+@app .route ("/контакт")
+@app .route ("/контакт/")
+def legacy_contact_page ():
+    return redirect (url_for ("lokacija"),code =301 )
+
+
+@app .route ("/poseta.html")
+@app .route ("/proba.html")
+@app .route ("/proba2.html")
+@app .route ("/proba2")
+def legacy_test_pages ():
     return redirect (url_for ("index"),code =301 )
 
+
+@app .route ("/sliki/<path:filename>")
+def legacy_sliki_asset (filename :str ):
+    clean_name =secure_filename (filename )
+    gallery_names ={"menuva.jpg","menuva1.jpg","menuva3.jpg","menuva4.jpg","menuva5.jpg"}
+    flag_names ={
+    "EUR.gif":"images/flags/eur.svg",
+    "USD.gif":"images/flags/usd.svg",
+    "GBP.gif":"images/flags/gbp.svg",
+    "CHF.gif":"images/flags/chf.svg",
+    "CAD.gif":"images/flags/cad.svg",
+    "AUD.gif":"images/flags/aud.svg",
+    }
+    if clean_name in gallery_names :
+        return redirect (url_for ("static",filename =f"images/gallery/{clean_name}"),code =301 )
+    if clean_name in flag_names :
+        return redirect (url_for ("static",filename =flag_names [clean_name]),code =301 )
+    return redirect (url_for ("galerija"),code =301 )
 
 @app .route ("/")
 def index ():
@@ -817,11 +990,13 @@ def index ():
     return render_template ("index.html",data =data ,visitor_count =visitor_count )
 
 
+@app .route ("/локација")
 @app .route ("/lokacija")
 def lokacija ():
     return render_template ("lokacija.html",data =load_data ())
 
 
+@app .route ("/галерија")
 @app .route ("/galerija")
 def galerija ():
     return render_template ("galerija.html",data =load_data ())
@@ -853,12 +1028,18 @@ def get_public_last_modified_date ():
     return datetime .fromtimestamp (max (timestamps ),SKOPJE_TZ ).date ().isoformat ()if SKOPJE_TZ else datetime .utcfromtimestamp (max (timestamps )).date ().isoformat ()
 
 
+def build_public_page_url (endpoint :str )->str :
+    if endpoint =="kursna_lista":
+        return f"{get_public_base_url ()}/курсна-листа"
+    return f"{get_public_base_url ()}{url_for (endpoint )}"
+
+
 def build_canonical_url (endpoint :str |None =None ):
     endpoint =endpoint or request .endpoint or "index"
     public_endpoints ={item [0 ]for item in PUBLIC_SITEMAP_PAGES }
     if endpoint not in public_endpoints :
         endpoint ="index"
-    return f"{get_public_base_url ()}{url_for (endpoint )}"
+    return build_public_page_url (endpoint )
 
 
 def build_page_meta (site_data :dict ):
@@ -867,7 +1048,10 @@ def build_page_meta (site_data :dict ):
     ui =UI_TEXT [current_lang ]
     business_name =localized_value (site_data ["business"]["name"],current_lang )
 
-    if endpoint =="lokacija":
+    if endpoint =="kursna_lista":
+        title ="Курсна листа денес - Менувачница ЕУРО МАРФИ Скопје"if current_lang =="mk"else "Exchange Rates Today - EURO MARFI Exchange Office Skopje"
+        description =f"{business_name}: {localized_value (site_data ['business']['daily_info'],current_lang )}. Куповен и продажен курс за EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY и ALB."if current_lang =="mk"else f"{business_name}: {localized_value (site_data ['business']['daily_info'],current_lang )}. Buy and sell rates for EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY, and ALB."
+    elif endpoint =="lokacija":
         title =f"{ui ['nav_location']} | {business_name}"
         description =f"{business_name}: {site_data ['business']['address']}. {ui ['contact_text']}"
     elif endpoint =="galerija":
@@ -999,7 +1183,7 @@ def sitemap_xml ():
     ]
 
     for endpoint ,change_frequency ,priority in PUBLIC_SITEMAP_PAGES :
-        page_url =f"{base_url}{url_for (endpoint )}"
+        page_url =build_public_page_url (endpoint )
         lines .extend ([
         "<url>",
         f"<loc>{xml_escape (page_url )}</loc>",
@@ -1014,6 +1198,25 @@ def sitemap_xml ():
     response .headers ["Cache-Control"]="public, max-age=3600"
     return response
 
+
+@app .route ("/llms.txt")
+def llms_txt ():
+    base_url =get_public_base_url ()
+    lines =[
+    "# EURO MARFI",
+    "",
+    "EURO MARFI is a currency exchange office in Skopje, North Macedonia.",
+    "The site publishes daily buy and sell exchange rates for EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY, and ALB.",
+    "",
+    f"Homepage: {base_url}/",
+    f"Exchange rates: {base_url}/курсна-листа",
+    f"Location: {base_url}/lokacija",
+    f"Gallery: {base_url}/galerija",
+    f"Sitemap: {base_url}/sitemap.xml",
+    "",
+    "Admin, login, logout, and language-switching URLs are private or utility pages and should not be indexed.",
+    ]
+    return Response ("\n".join (lines ),mimetype ="text/plain")
 
 @app .route ("/robots.txt")
 def robots_txt ():
