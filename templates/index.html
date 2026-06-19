@@ -83,10 +83,13 @@
   </div>
   <div class="faq-list">
     {% for item in ui.faq_items %}
-    <article class="faq-item">
-      <h3>{{ item.question }}</h3>
+    <details class="faq-item" {% if loop.first %}open{% endif %}>
+      <summary>
+        <span>{{ item.question }}</span>
+        <span class="faq-toggle" aria-hidden="true"></span>
+      </summary>
       <p>{{ item.answer }}</p>
-    </article>
+    </details>
     {% endfor %}
   </div>
 </section>

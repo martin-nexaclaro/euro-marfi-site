@@ -136,8 +136,8 @@ UI_TEXT ={
 "faq_title":"Чести прашања за курсна листа",
 "faq_items":[
 {"question":"Каде има менувачница во Скопје?","answer":"ЕУРО МАРФИ се наоѓа на ul. Hristo Tatarchev 33a, Skopje 1000. На страницата Локација има мапа, адреса и директен телефонски контакт."},
-{"question":"Кога се ажурира курсната листа?","answer":"Курсната листа е поставена за дневен преглед и се ажурира преку админ панелот кога сопственикот ќе ги внесе најновите куповни и продажни курсеви."},
-{"question":"Кои валути се прикажани на курсната листа?","answer":"На страницата се прикажани куповен и продажен курс за EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY и ALB."},
+{"question":"Кога се ажурира курсната листа?","answer":"Курсната листа се проверува и ажурира секој ден од сопственикот со најновите куповни и продажни курсеви."},
+{"question":"Кои валути се прикажани на курсната листа?","answer":"На страницата се прикажани куповен и продажен курс за EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY и ALB. За други валути, јавете ни се директно."},
 ],
 "call_label":"Јавете се",
 "moneygram_title":"MoneyGram трансфер услуги",
@@ -251,8 +251,8 @@ UI_TEXT ={
 "faq_title":"Exchange Rate FAQ",
 "faq_items":[
 {"question":"Where is the exchange office in Skopje?","answer":"EURO MARFI is located at ul. Hristo Tatarchev 33a, Skopje 1000. The Location page includes the map, address, and direct phone contact."},
-{"question":"When is the exchange rate list updated?","answer":"The exchange rate list is prepared for daily use and is updated from the admin panel when the owner enters the latest buy and sell rates."},
-{"question":"Which currencies are shown on the exchange rate list?","answer":"The page shows buy and sell rates for EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY, and ALB."},
+{"question":"When is the exchange rate list updated?","answer":"The exchange rate list is checked and updated every day by the owner with the latest buy and sell rates."},
+{"question":"Which currencies are shown on the exchange rate list?","answer":"The page shows buy and sell rates for EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY, and ALB. For other currencies, please call us directly."},
 ],
 "call_label":"Call now",
 "moneygram_title":"MoneyGram Transfer Services",
