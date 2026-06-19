@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}{{ page_meta.title }}{% endblock %}
 
@@ -120,7 +120,7 @@
     <h3>{{ ui.location_title }}</h3>
     <p>{{ data.business.address }}</p>
     <div class="stacked-links">
-      <a class="location-action" href="{{ localized_url('lokacija') }}">{{ ui.location_link }}</a>
+      <a class="location-action" href="{{ localized_path('lokacija') }}">{{ ui.location_link }}</a>
     </div>
   </article>
 

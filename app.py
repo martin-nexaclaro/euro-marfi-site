@@ -942,6 +942,7 @@ def inject_site_data ():
     "canonical_url":page_meta ["canonical_url"],
     "alternate_urls":build_alternate_urls (page_meta ["canonical_endpoint"]),
     "localized_url":lambda endpoint ,lang =None :build_localized_page_url (endpoint ,lang or current_lang ),
+    "localized_path":lambda endpoint ,lang =None :build_localized_page_path (endpoint ,lang or current_lang ),
     "local_business_schema":build_local_business_schema (site_data ,page_meta ),
     }
 
@@ -1082,11 +1083,13 @@ def normalize_public_endpoint (endpoint :str |None )->str :
     return CANONICAL_ENDPOINTS .get (endpoint ,endpoint )
 
 
-def build_localized_page_url (endpoint :str ,lang :str )->str :
+def build_localized_page_path (endpoint :str ,lang :str )->str :
     canonical_endpoint =normalize_public_endpoint (endpoint )
-    path =LOCALIZED_ROUTE_PATHS .get (canonical_endpoint ,LOCALIZED_ROUTE_PATHS ["index"]).get (lang ,"/")
-    return f"{get_public_base_url ()}{path}"
+    return LOCALIZED_ROUTE_PATHS .get (canonical_endpoint ,LOCALIZED_ROUTE_PATHS ["index"]).get (lang ,"/")
 
+
+def build_localized_page_url (endpoint :str ,lang :str )->str :
+    return f"{get_public_base_url ()}{build_localized_page_path (endpoint ,lang )}"
 
 def build_public_page_url (endpoint :str ,lang :str ="mk")->str :
     return build_localized_page_url (endpoint ,lang )

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="{{ current_lang }}">
 <head>
   <meta charset="UTF-8">
@@ -44,7 +44,7 @@
 
     <header class="topbar" data-reveal>
         <div class="brand-block">
-          <a href="{{ localized_url('index') }}" class="brand-mark">
+          <a href="{{ localized_path('index') }}" class="brand-mark">
             <span class="brand-orb"></span>
             <span>
               <strong>{{ text_for(site_data.business.name) }}</strong>
@@ -62,20 +62,20 @@
 
         <div class="header-tools">
           <nav class="main-nav" id="mobile-nav" data-nav-menu>
-            <a href="{{ localized_url('index') }}" class="{% if page_meta.canonical_endpoint == 'index' %}is-active{% endif %}">{{ ui.nav_home }}</a>
-            <a href="{{ localized_url('lokacija') }}" class="{% if page_meta.canonical_endpoint == 'lokacija' %}is-active{% endif %}">{{ ui.nav_location }}</a>
-            <a href="{{ localized_url('galerija') }}" class="{% if page_meta.canonical_endpoint == 'galerija' %}is-active{% endif %}">{{ ui.nav_gallery }}</a>
+            <a href="{{ localized_path('index') }}" class="{% if page_meta.canonical_endpoint == 'index' %}is-active{% endif %}">{{ ui.nav_home }}</a>
+            <a href="{{ localized_path('lokacija') }}" class="{% if page_meta.canonical_endpoint == 'lokacija' %}is-active{% endif %}">{{ ui.nav_location }}</a>
+            <a href="{{ localized_path('galerija') }}" class="{% if page_meta.canonical_endpoint == 'galerija' %}is-active{% endif %}">{{ ui.nav_gallery }}</a>
             <a href="{{ url_for('login') }}" class="{% if request.endpoint in ['login', 'admin'] %}is-active{% endif %}">{{ ui.nav_admin }}</a>
           </nav>
 
           <div class="lang-switcher" aria-label="{{ ui.lang_label }}">
             <a
-              href="{{ alternate_urls.mk }}"
+              href="{{ localized_path(page_meta.canonical_endpoint, 'mk') }}"
               class="lang-link {% if current_lang == 'mk' %}is-active{% endif %}">
               MK
             </a>
             <a
-              href="{{ alternate_urls.en }}"
+              href="{{ localized_path(page_meta.canonical_endpoint, 'en') }}"
               class="lang-link {% if current_lang == 'en' %}is-active{% endif %}">
               EN
             </a>
