@@ -939,10 +939,12 @@ def legacy_sliki_html ():
     return redirect (url_for ("galerija"),code =301 )
 
 
-@app .route ("/kursna-lista")
-@app .route ("/kursna-lista/")
+@app .route ("/%D0%BA%D1%83%D1%80%D1%81%D0%BD%D0%B0-%D0%BB%D0%B8%D1%81%D1%82%D0%B0")
+@app .route ("/%D0%BA%D1%83%D1%80%D1%81%D0%BD%D0%B0-%D0%BB%D0%B8%D1%81%D1%82%D0%B0/")
 @app .route ("/курсна-листа")
 @app .route ("/курсна-листа/")
+@app .route ("/kursna-lista")
+@app .route ("/kursna-lista/")
 def kursna_lista ():
     visitor_count =increment_visitor_count ()
     data =load_data ()
@@ -1030,7 +1032,7 @@ def get_public_last_modified_date ():
 
 def build_public_page_url (endpoint :str )->str :
     if endpoint =="kursna_lista":
-        return f"{get_public_base_url ()}/курсна-листа"
+        return f"{get_public_base_url ()}/kursna-lista"
     return f"{get_public_base_url ()}{url_for (endpoint )}"
 
 
@@ -1209,7 +1211,7 @@ def llms_txt ():
     "The site publishes daily buy and sell exchange rates for EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY, and ALB.",
     "",
     f"Homepage: {base_url}/",
-    f"Exchange rates: {base_url}/курсна-листа",
+    f"Exchange rates: {base_url}/kursna-lista",
     f"Location: {base_url}/lokacija",
     f"Gallery: {base_url}/galerija",
     f"Sitemap: {base_url}/sitemap.xml",
