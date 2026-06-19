@@ -1,4 +1,4 @@
-﻿from __future__ import annotations 
+from __future__ import annotations
 
 import io
 import json
@@ -14,15 +14,15 @@ from urllib.request import Request ,urlopen
 from xml.sax.saxutils import escape as xml_escape
 
 try :
-    from zoneinfo import ZoneInfo ,ZoneInfoNotFoundError 
+    from zoneinfo import ZoneInfo ,ZoneInfoNotFoundError
 except ImportError :
-    ZoneInfo =None 
-    ZoneInfoNotFoundError =Exception 
+    ZoneInfo =None
+    ZoneInfoNotFoundError =Exception
 
-import pyotp 
-import qrcode 
-from flask import Flask ,Response ,flash ,redirect ,render_template ,request ,session ,url_for 
-from qrcode .image .svg import SvgPathImage 
+import pyotp
+import qrcode
+from flask import Flask ,Response ,flash ,redirect ,render_template ,request ,session ,url_for
+from qrcode .image .svg import SvgPathImage
 from werkzeug.security import check_password_hash ,generate_password_hash
 from werkzeug.utils import secure_filename
 
@@ -54,6 +54,7 @@ SUPABASE_TABLE =os .environ .get ("SUPABASE_TABLE","site_settings" ).strip ()or 
 SUPABASE_STORAGE_BUCKET =os .environ .get ("SUPABASE_STORAGE_BUCKET","site-media" ).strip ()
 SUPABASE_MEDIA_PREFIX =os .environ .get ("SUPABASE_MEDIA_PREFIX","uploads" ).strip ("/")
 SUPABASE_TIMEOUT =float (os .environ .get ("SUPABASE_TIMEOUT","8" )or 8)
+LEGACY_VISITOR_COUNT =2991516
 PUBLIC_SITEMAP_PAGES =(
 ("index","weekly","1.0"),
 ("kursna_lista","daily","0.95"),
@@ -88,10 +89,10 @@ SEO_IMAGE_FILENAME ="images/gallery/menuva5.jpg"
 NOINDEX_ENDPOINTS ={"login","admin","logout","set_language"}
 
 try :
-    SKOPJE_TZ =ZoneInfo ("Europe/Skopje")if ZoneInfo else None 
+    SKOPJE_TZ =ZoneInfo ("Europe/Skopje")if ZoneInfo else None
 except ZoneInfoNotFoundError :
 # Fallback for Windows/dev environments where tzdata is not installed.
-    SKOPJE_TZ =None 
+    SKOPJE_TZ =None
 
 UI_TEXT ={
 "mk":{
@@ -146,7 +147,7 @@ UI_TEXT ={
 "location_title":"Посетете нè",
 "location_link":"Отвори локација",
 "counter_eyebrow":"Посетители",
-"counter_text":"Едноставен бројач на посети зачуван локално во постоечката JSON датотека.",
+"counter_text":"Бројач на посети продолжен од постоечката веб-страница.",
 "location_page_title":"Локација",
 "address_label":"Адреса",
 "location_page_eyebrow":"Контакт и насока",
@@ -261,7 +262,7 @@ UI_TEXT ={
 "location_title":"Visit Us",
 "location_link":"Open location page",
 "counter_eyebrow":"Visitors",
-"counter_text":"A simple visit counter stored locally in the existing JSON file.",
+"counter_text":"Visit counter continued from the existing website.",
 "location_page_title":"Location",
 "address_label":"Address",
 "location_page_eyebrow":"Contact & Directions",
@@ -414,7 +415,7 @@ DEFAULT_DATA ={
 },
 },
 ],
-"visitor_count":0 ,
+"visitor_count":LEGACY_VISITOR_COUNT ,
 }
 
 
@@ -575,17 +576,17 @@ def load_admin_settings ()->dict :
     }
 
     if settings ["totp_enabled"]and not settings ["totp_secret"]:
-        settings ["totp_enabled"]=False 
+        settings ["totp_enabled"]=False
 
-    return settings 
+    return settings
 
 
 def get_pending_totp_secret ()->str :
     pending_secret =session .get ("pending_totp_secret","").strip ()
     if not pending_secret :
         pending_secret =pyotp .random_base32 ()
-        session ["pending_totp_secret"]=pending_secret 
-    return pending_secret 
+        session ["pending_totp_secret"]=pending_secret
+    return pending_secret
 
 
 def clear_pending_totp_secret ()->None :
@@ -598,13 +599,13 @@ def build_totp_setup_payload (username :str ,secret :str )->tuple [str ,str ]:
     qr_image =qrcode .make (provisioning_uri ,image_factory =SvgPathImage ,box_size =5 ,border =2 )
     qr_buffer =io .BytesIO ()
     qr_image .save (qr_buffer )
-    return qr_buffer .getvalue ().decode ("utf-8"),provisioning_uri 
+    return qr_buffer .getvalue ().decode ("utf-8"),provisioning_uri
 
 
 def localized_value (value ,lang :str ):
     if isinstance (value ,dict ):
         return value .get (lang )or value .get ("mk")or next (iter (value .values ()),"")
-    return value 
+    return value
 
 
 def normalize_localized_field (value ,default_value ):
@@ -615,8 +616,8 @@ def normalize_localized_field (value ,default_value ):
                 if value .get (lang ):
                     normalized [lang ]=value [lang ]
         elif isinstance (value ,str )and value .strip ():
-            normalized ["mk"]=value 
-        return normalized 
+            normalized ["mk"]=value
+        return normalized
     return value if value not in (None ,"")else deepcopy (default_value )
 
 
@@ -641,7 +642,7 @@ def load_data ()->dict :
         for lang in SUPPORTED_LANGUAGES :
             if not isinstance (current_notes .get (lang ),list ):
                 current_notes [lang ]=deepcopy (DEFAULT_DATA ["notes"][lang ])
-        data ["notes"]=current_notes 
+        data ["notes"]=current_notes
 
     current_gallery =data .get ("gallery")
     if not isinstance (current_gallery ,list )or not current_gallery :
@@ -675,10 +676,10 @@ def load_data ()->dict :
         currency ["flag_image"]=existing_currency .get ("flag_image",default_currency ["flag_image"])
         currency ["name"]=normalize_localized_field (existing_currency .get ("name"),default_currency ["name"])
         normalized_currencies .append (currency )
-    data ["currencies"]=normalized_currencies 
+    data ["currencies"]=normalized_currencies
 
-    data ["visitor_count"]=int (data .get ("visitor_count",0 ))
-    return data 
+    data ["visitor_count"]=max (int (data .get ("visitor_count",0 )),LEGACY_VISITOR_COUNT )
+    return data
 
 
 def save_data (data :dict )->None :
@@ -728,26 +729,26 @@ def get_current_language ()->str :
 def parse_time_value (raw_value :str )->time |None :
     match =re .search (r"(\d{1,2})(?::(\d{2}))?",raw_value )
     if not match :
-        return None 
+        return None
     hour =int (match .group (1 ))
     minute =int (match .group (2 )or 0 )
     if hour >23 or minute >59 :
-        return None 
+        return None
     return time (hour ,minute )
 
 
 def parse_working_hours_range (raw_value :str )->tuple [time ,time ]|None :
     matches =re .findall (r"(\d{1,2})(?::(\d{2}))?",raw_value )
     if len (matches )<2 :
-        return None 
+        return None
 
     start_hours ,start_minutes =matches [0 ]
     end_hours ,end_minutes =matches [1 ]
     start =parse_time_value (f"{start_hours }:{start_minutes or '00'}")
     end =parse_time_value (f"{end_hours }:{end_minutes or '00'}")
     if not start or not end :
-        return None 
-    return start ,end 
+        return None
+    return start ,end
 
 
 def parse_allowed_weekdays (raw_value :str )->set [int ]:
@@ -788,19 +789,19 @@ def get_business_status (working_hours )->dict :
     parsed_hours =parse_working_hours_range (raw_hours )
 
     if parsed_hours :
-        start_time ,end_time =parsed_hours 
+        start_time ,end_time =parsed_hours
         display_hours =f"{start_time .strftime ('%H:%M')} - {end_time .strftime ('%H:%M')}"
         allowed_weekdays =parse_allowed_weekdays (raw_hours )
         now =datetime .now (SKOPJE_TZ )if SKOPJE_TZ else datetime .now ()
         current_time =now .time ()
 
         if start_time <=end_time :
-            is_open =now .weekday ()in allowed_weekdays and start_time <=current_time <end_time 
+            is_open =now .weekday ()in allowed_weekdays and start_time <=current_time <end_time
         else :
-            is_open =current_time >=start_time or current_time <end_time 
+            is_open =current_time >=start_time or current_time <end_time
     else :
         display_hours =localized_value (working_hours ,"mk")
-        is_open =False 
+        is_open =False
 
     return {
     "is_open":is_open ,
@@ -811,12 +812,12 @@ def get_business_status (working_hours )->dict :
 def increment_visitor_count ()->int :
     data =load_data ()
     if supabase_is_configured ():
-        return int (data .get ("visitor_count",0 ))
+        return int (data .get ("visitor_count",LEGACY_VISITOR_COUNT ))
     if not session .get ("visit_counted"):
-        data ["visitor_count"]=int (data .get ("visitor_count",0 ))+1 
+        data ["visitor_count"]=max (int (data .get ("visitor_count",0 )),LEGACY_VISITOR_COUNT )+1
         save_data (data )
-        session ["visit_counted"]=True 
-    return int (data .get ("visitor_count",0 ))
+        session ["visit_counted"]=True
+    return int (data .get ("visitor_count",LEGACY_VISITOR_COUNT ))
 
 def update_site_data_from_admin_form (data :dict ,form ,files =None )->dict :
     data ["business"]["daily_info"]={
@@ -917,8 +918,8 @@ def update_site_data_from_admin_form (data :dict ,form ,files =None )->dict :
         updated_currency ["sell"]=form .get (f"sell_{code }",currency .get ("sell","")).strip ()
         updated_currencies .append (updated_currency )
 
-    data ["currencies"]=updated_currencies 
-    return data 
+    data ["currencies"]=updated_currencies
+    return data
 
 
 @app .template_filter ("highlight_date")
@@ -950,7 +951,7 @@ def inject_site_data ():
 @app .route ("/set-language/<lang>")
 def set_language (lang :str ):
     if lang in SUPPORTED_LANGUAGES :
-        session ["lang"]=lang 
+        session ["lang"]=lang
     next_url =request .args .get ("next")or url_for ("index")
     return redirect (next_url )
 
@@ -1352,7 +1353,7 @@ def login ():
         elif admin_settings ["totp_enabled"]and not pyotp .TOTP (admin_settings ["totp_secret"]).verify (otp_code ,valid_window =1 ):
             flash ("Внесете валиден 2FA код од апликацијата за автентикација.","error")
         else :
-            session ["admin_logged_in"]=True 
+            session ["admin_logged_in"]=True
             session ["admin_username"]=admin_settings ["username"]
             clear_pending_totp_secret ()
             flash ("Најавата е успешна. Сега можете да ја уредувате страницата.","success")
@@ -1408,8 +1409,8 @@ def admin ():
             elif not pyotp .TOTP (pending_secret ).verify (otp_code ,valid_window =1 ):
                 flash ("Внесете валиден код од апликацијата за автентикација.","error")
             else :
-                admin_settings ["totp_enabled"]=True 
-                admin_settings ["totp_secret"]=pending_secret 
+                admin_settings ["totp_enabled"]=True
+                admin_settings ["totp_secret"]=pending_secret
                 save_admin_settings (admin_settings )
                 clear_pending_totp_secret ()
                 flash ("2FA е успешно активирана.","success")
@@ -1419,7 +1420,7 @@ def admin ():
             if not check_password_hash (admin_settings ["password_hash"],current_password ):
                 flash ("Внесете ја точната лозинка за да ја исклучите 2FA.","error")
             else :
-                admin_settings ["totp_enabled"]=False 
+                admin_settings ["totp_enabled"]=False
                 admin_settings ["totp_secret"]=""
                 save_admin_settings (admin_settings )
                 clear_pending_totp_secret ()
