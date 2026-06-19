@@ -262,7 +262,7 @@ UI_TEXT ={
 "location_title":"Visit Us",
 "location_link":"Open location page",
 "counter_eyebrow":"Visitors",
-"counter_text":"Visit counter continued from the existing website.",
+"counter_text":"Website visitor counter.",
 "location_page_title":"Location",
 "address_label":"Address",
 "location_page_eyebrow":"Contact & Directions",
