@@ -722,6 +722,34 @@ label,
   gap: 12px;
 }
 
+
+.faq-list {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.faq-item {
+  min-width: 0;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 232, 255, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.faq-item h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  line-height: 1.28;
+}
+
+.faq-item p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
 .note-item {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -2275,7 +2303,8 @@ textarea:focus {
     font-size: 0.94rem;
   }
 
-  .note-item {
+
+.note-item {
     grid-template-columns: 1fr;
     gap: 10px;
     padding: 14px;

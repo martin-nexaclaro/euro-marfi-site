@@ -8,6 +8,10 @@
   <meta name="robots" content="{{ page_meta.robots }}">
   <meta name="googlebot" content="{{ page_meta.robots }}">
   <link rel="canonical" href="{{ canonical_url }}">
+  {% for lang_code, alternate_url in alternate_urls.items() %}
+  <link rel="alternate" hreflang="{{ lang_code }}" href="{{ alternate_url }}">
+  {% endfor %}
+  <link rel="alternate" hreflang="x-default" href="{{ alternate_urls.mk }}">
   <meta property="og:site_name" content="{{ text_for(site_data.business.name) }}">
   <meta property="og:title" content="{{ page_meta.title }}">
   <meta property="og:description" content="{{ page_meta.description }}">
@@ -40,7 +44,7 @@
 
     <header class="topbar" data-reveal>
         <div class="brand-block">
-          <a href="{{ url_for('index') }}" class="brand-mark">
+          <a href="{{ localized_url('index') }}" class="brand-mark">
             <span class="brand-orb"></span>
             <span>
               <strong>{{ text_for(site_data.business.name) }}</strong>
@@ -58,20 +62,20 @@
 
         <div class="header-tools">
           <nav class="main-nav" id="mobile-nav" data-nav-menu>
-            <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}is-active{% endif %}">{{ ui.nav_home }}</a>
-            <a href="{{ url_for('lokacija') }}" class="{% if request.endpoint == 'lokacija' %}is-active{% endif %}">{{ ui.nav_location }}</a>
-            <a href="{{ url_for('galerija') }}" class="{% if request.endpoint == 'galerija' %}is-active{% endif %}">{{ ui.nav_gallery }}</a>
+            <a href="{{ localized_url('index') }}" class="{% if page_meta.canonical_endpoint == 'index' %}is-active{% endif %}">{{ ui.nav_home }}</a>
+            <a href="{{ localized_url('lokacija') }}" class="{% if page_meta.canonical_endpoint == 'lokacija' %}is-active{% endif %}">{{ ui.nav_location }}</a>
+            <a href="{{ localized_url('galerija') }}" class="{% if page_meta.canonical_endpoint == 'galerija' %}is-active{% endif %}">{{ ui.nav_gallery }}</a>
             <a href="{{ url_for('login') }}" class="{% if request.endpoint in ['login', 'admin'] %}is-active{% endif %}">{{ ui.nav_admin }}</a>
           </nav>
 
           <div class="lang-switcher" aria-label="{{ ui.lang_label }}">
             <a
-              href="{{ url_for('set_language', lang='mk', next=request.full_path.rstrip('?')) }}"
+              href="{{ alternate_urls.mk }}"
               class="lang-link {% if current_lang == 'mk' %}is-active{% endif %}">
               MK
             </a>
             <a
-              href="{{ url_for('set_language', lang='en', next=request.full_path.rstrip('?')) }}"
+              href="{{ alternate_urls.en }}"
               class="lang-link {% if current_lang == 'en' %}is-active{% endif %}">
               EN
             </a>

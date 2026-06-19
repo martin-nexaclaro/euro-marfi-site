@@ -71,7 +71,25 @@
     {% endfor %}
   </div>
 </section>
-
+<section class="faq-panel" data-reveal>
+  <div class="section-heading">
+    <div class="section-heading-title">
+      <span class="section-line" aria-hidden="true"></span>
+      <div>
+        <span class="eyebrow">{{ ui.faq_eyebrow }}</span>
+        <h2>{{ ui.faq_title }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="faq-list">
+    {% for item in ui.faq_items %}
+    <article class="faq-item">
+      <h3>{{ item.question }}</h3>
+      <p>{{ item.answer }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
 <section class="contact-strip" data-reveal>
   <article class="info-card homepage-contact-card">
     <span class="eyebrow">{{ ui.contact_eyebrow }}</span>
@@ -102,7 +120,7 @@
     <h3>{{ ui.location_title }}</h3>
     <p>{{ data.business.address }}</p>
     <div class="stacked-links">
-      <a class="location-action" href="{{ url_for('lokacija') }}">{{ ui.location_link }}</a>
+      <a class="location-action" href="{{ localized_url('lokacija') }}">{{ ui.location_link }}</a>
     </div>
   </article>
 

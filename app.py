@@ -60,6 +60,18 @@ PUBLIC_SITEMAP_PAGES =(
 ("lokacija","monthly","0.8"),
 ("galerija","monthly","0.7"),
 )
+CANONICAL_ENDPOINTS ={
+"en_index":"index",
+"en_kursna_lista":"kursna_lista",
+"en_lokacija":"lokacija",
+"en_galerija":"galerija",
+}
+LOCALIZED_ROUTE_PATHS ={
+"index":{"mk":"/","en":"/en/"},
+"kursna_lista":{"mk":"/kursna-lista","en":"/en/exchange-rates"},
+"lokacija":{"mk":"/lokacija","en":"/en/location"},
+"galerija":{"mk":"/galerija","en":"/en/gallery"},
+}
 SEO_HOME_TITLE ={
 "mk":"Курсна Листа - Менувачница ЕУРО МАРФИ Скопје",
 "en":"Exchange Rates - EURO MARFI Exchange Office Skopje",
@@ -120,6 +132,13 @@ UI_TEXT ={
 "contact_eyebrow":"Контакт",
 "contact_title":"Јавете се директно",
 "contact_text":"Брз контакт за проверка на курс, информации и услуга.",
+"faq_eyebrow":"Прашања",
+"faq_title":"Чести прашања за курсна листа",
+"faq_items":[
+{"question":"Каде има менувачница во Скопје?","answer":"ЕУРО МАРФИ се наоѓа на ul. Hristo Tatarchev 33a, Skopje 1000. На страницата Локација има мапа, адреса и директен телефонски контакт."},
+{"question":"Кога се ажурира курсната листа?","answer":"Курсната листа е поставена за дневен преглед и се ажурира преку админ панелот кога сопственикот ќе ги внесе најновите куповни и продажни курсеви."},
+{"question":"Кои валути се прикажани на курсната листа?","answer":"На страницата се прикажани куповен и продажен курс за EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY и ALB."},
+],
 "call_label":"Јавете се",
 "moneygram_title":"MoneyGram трансфер услуги",
 "moneygram_text":"Во менувачницата е достапна и услуга за MoneyGram парични трансфери.",
@@ -228,6 +247,13 @@ UI_TEXT ={
 "contact_eyebrow":"Contact",
 "contact_title":"Call Us Directly",
 "contact_text":"Quick contact for rate checks, information, and service.",
+"faq_eyebrow":"Questions",
+"faq_title":"Exchange Rate FAQ",
+"faq_items":[
+{"question":"Where is the exchange office in Skopje?","answer":"EURO MARFI is located at ul. Hristo Tatarchev 33a, Skopje 1000. The Location page includes the map, address, and direct phone contact."},
+{"question":"When is the exchange rate list updated?","answer":"The exchange rate list is prepared for daily use and is updated from the admin panel when the owner enters the latest buy and sell rates."},
+{"question":"Which currencies are shown on the exchange rate list?","answer":"The page shows buy and sell rates for EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY, and ALB."},
+],
 "call_label":"Call now",
 "moneygram_title":"MoneyGram Transfer Services",
 "moneygram_text":"The exchange office also supports MoneyGram money transfer services.",
@@ -693,6 +719,8 @@ def is_logged_in ()->bool :
 
 
 def get_current_language ()->str :
+    if request .endpoint and request .endpoint .startswith ("en_"):
+        return "en"
     lang =session .get ("lang","mk")
     return lang if lang in SUPPORTED_LANGUAGES else "mk"
 
@@ -912,6 +940,8 @@ def inject_site_data ():
     "public_media_url":public_media_url,
     "page_meta":page_meta ,
     "canonical_url":page_meta ["canonical_url"],
+    "alternate_urls":build_alternate_urls (page_meta ["canonical_endpoint"]),
+    "localized_url":lambda endpoint ,lang =None :build_localized_page_url (endpoint ,lang or current_lang ),
     "local_business_schema":build_local_business_schema (site_data ,page_meta ),
     }
 
@@ -947,6 +977,22 @@ def legacy_sliki_html ():
 @app .route ("/kursna-lista")
 @app .route ("/kursna-lista/")
 def kursna_lista ():
+    visitor_count =increment_visitor_count ()
+    data =load_data ()
+    return render_template ("index.html",data =data ,visitor_count =visitor_count )
+
+
+@app .route ("/en/")
+def en_index ():
+    session ["lang"]="en"
+    visitor_count =increment_visitor_count ()
+    data =load_data ()
+    return render_template ("index.html",data =data ,visitor_count =visitor_count )
+
+
+@app .route ("/en/exchange-rates")
+def en_kursna_lista ():
+    session ["lang"]="en"
     visitor_count =increment_visitor_count ()
     data =load_data ()
     return render_template ("index.html",data =data ,visitor_count =visitor_count )
@@ -999,9 +1045,21 @@ def lokacija ():
     return render_template ("lokacija.html",data =load_data ())
 
 
+@app .route ("/en/location")
+def en_lokacija ():
+    session ["lang"]="en"
+    return render_template ("lokacija.html",data =load_data ())
+
+
 @app .route ("/галерија")
 @app .route ("/galerija")
 def galerija ():
+    return render_template ("galerija.html",data =load_data ())
+
+
+@app .route ("/en/gallery")
+def en_galerija ():
+    session ["lang"]="en"
     return render_template ("galerija.html",data =load_data ())
 
 
@@ -1018,22 +1076,36 @@ def get_public_base_url ():
 def get_public_last_modified_date ():
     return datetime .now (SKOPJE_TZ ).date ().isoformat ()if SKOPJE_TZ else datetime .utcnow ().date ().isoformat ()
 
-def build_public_page_url (endpoint :str )->str :
-    if endpoint =="kursna_lista":
-        return f"{get_public_base_url ()}/kursna-lista"
-    return f"{get_public_base_url ()}{url_for (endpoint )}"
+
+def normalize_public_endpoint (endpoint :str |None )->str :
+    endpoint =endpoint or "index"
+    return CANONICAL_ENDPOINTS .get (endpoint ,endpoint )
+
+
+def build_localized_page_url (endpoint :str ,lang :str )->str :
+    canonical_endpoint =normalize_public_endpoint (endpoint )
+    path =LOCALIZED_ROUTE_PATHS .get (canonical_endpoint ,LOCALIZED_ROUTE_PATHS ["index"]).get (lang ,"/")
+    return f"{get_public_base_url ()}{path}"
+
+
+def build_public_page_url (endpoint :str ,lang :str ="mk")->str :
+    return build_localized_page_url (endpoint ,lang )
+
+
+def build_alternate_urls (endpoint :str )->dict :
+    canonical_endpoint =normalize_public_endpoint (endpoint )
+    return {lang :build_localized_page_url (canonical_endpoint ,lang )for lang in SUPPORTED_LANGUAGES }
 
 
 def build_canonical_url (endpoint :str |None =None ):
-    endpoint =endpoint or request .endpoint or "index"
+    endpoint =normalize_public_endpoint (endpoint or request .endpoint or "index")
     public_endpoints ={item [0 ]for item in PUBLIC_SITEMAP_PAGES }
     if endpoint not in public_endpoints :
         endpoint ="index"
-    return build_public_page_url (endpoint )
-
+    return build_public_page_url (endpoint ,get_current_language ())
 
 def build_page_meta (site_data :dict ):
-    endpoint =request .endpoint or "index"
+    endpoint =normalize_public_endpoint (request .endpoint or "index")
     current_lang =get_current_language ()
     ui =UI_TEXT [current_lang ]
     business_name =localized_value (site_data ["business"]["name"],current_lang )
@@ -1058,6 +1130,7 @@ def build_page_meta (site_data :dict ):
     "title":title ,
     "description":description ,
     "canonical_url":build_canonical_url (endpoint ),
+    "canonical_endpoint":endpoint ,
     "robots":"noindex, nofollow"if endpoint in NOINDEX_ENDPOINTS else "index, follow, max-image-preview:large",
     "image_url":f"{get_public_base_url ()}{url_for ('static',filename =SEO_IMAGE_FILENAME )}",
     "image_alt":f"{business_name} - {ui ['rates_title']}",
@@ -1076,9 +1149,8 @@ def build_local_business_schema (site_data :dict ,page_meta :dict ):
     all_phones =[phone for phone in business .get ("phones",[])if phone ]
     currencies =[currency .get ("code","")for currency in site_data .get ("currencies",[])if currency .get ("code")]
     description =page_meta ["description"]
-    return {
-    "@context":"https://schema.org",
-    "@graph":[
+    faq_items =UI_TEXT [current_lang ].get ("faq_items",[])if page_meta .get ("canonical_endpoint") in {"index","kursna_lista"}else []
+    graph =[
     {
     "@type":"FinancialService",
     "@id":f"{public_base_url}/#business",
@@ -1152,9 +1224,40 @@ def build_local_business_schema (site_data :dict ,page_meta :dict ):
     "caption":page_meta ["image_alt"],
     },
     },
-    ],
+    ]
+    breadcrumb_items =[
+    {
+    "@type":"ListItem",
+    "position":1,
+    "name":"Home"if current_lang =="en"else "Почетна",
+    "item":build_localized_page_url ("index",current_lang ),
     }
-
+    ]
+    if page_meta .get ("canonical_endpoint") !="index":
+        breadcrumb_items .append ({
+        "@type":"ListItem",
+        "position":2,
+        "name":page_meta ["title"].split ("|")[0 ].strip (),
+        "item":canonical_url,
+        })
+    graph .append ({
+    "@type":"BreadcrumbList",
+    "@id":f"{canonical_url}#breadcrumb",
+    "itemListElement":breadcrumb_items,
+    })
+    if faq_items:
+        graph .append ({
+        "@type":"FAQPage",
+        "@id":f"{canonical_url}#faq",
+        "mainEntity":[
+        {
+        "@type":"Question",
+        "name":item ["question"],
+        "acceptedAnswer":{"@type":"Answer","text":item ["answer"]},
+        }for item in faq_items
+        ],
+        })
+    return {"@context":"https://schema.org","@graph":graph}
 
 @app .after_request
 def apply_seo_headers (response ):
@@ -1166,28 +1269,30 @@ def apply_seo_headers (response ):
 @app .route ("/sitemap.xml")
 def sitemap_xml ():
     last_modified =get_public_last_modified_date ()
-    base_url =get_public_base_url ()
     lines =[
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     ]
 
     for endpoint ,change_frequency ,priority in PUBLIC_SITEMAP_PAGES :
-        page_url =build_public_page_url (endpoint )
-        lines .extend ([
-        "<url>",
-        f"<loc>{xml_escape (page_url )}</loc>",
-        f"<lastmod>{last_modified}</lastmod>",
-        f"<changefreq>{change_frequency}</changefreq>",
-        f"<priority>{priority}</priority>",
-        "</url>",
-        ])
+        alternate_urls =build_alternate_urls (endpoint )
+        for lang in SUPPORTED_LANGUAGES :
+            page_url =build_public_page_url (endpoint ,lang )
+            lines .extend ([
+            "<url>",
+            f"<loc>{xml_escape (page_url )}</loc>",
+            *[f"<xhtml:link rel=\"alternate\" hreflang=\"{alternate_lang}\" href=\"{xml_escape (alternate_url )}\" />"for alternate_lang ,alternate_url in alternate_urls .items ()],
+            f"<xhtml:link rel=\"alternate\" hreflang=\"x-default\" href=\"{xml_escape (build_public_page_url (endpoint ,'mk'))}\" />",
+            f"<lastmod>{last_modified}</lastmod>",
+            f"<changefreq>{change_frequency}</changefreq>",
+            f"<priority>{priority}</priority>",
+            "</url>",
+            ])
 
     lines .append ("</urlset>")
     response =Response ("\n".join (lines ),mimetype ="application/xml")
     response .headers ["Cache-Control"]="public, max-age=3600"
     return response
-
 
 @app .route ("/llms.txt")
 def llms_txt ():
