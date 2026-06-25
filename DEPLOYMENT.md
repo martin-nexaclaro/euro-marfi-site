@@ -7,7 +7,7 @@ Run `supabase_setup.sql` in the Supabase SQL Editor.
 Use these Vercel environment variables:
 
 - `SECRET_KEY`: long random value for Flask sessions
-- `SITE_URL`: `https://menuvacnica.mk`
+- `SITE_URL`: `https://menuvacnica.com.mk`
 - `SUPABASE_URL`: Supabase project URL
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase legacy service_role API key, server-side only
 - `SUPABASE_TABLE`: `site_settings`
@@ -44,10 +44,18 @@ Only change web records after the Vercel preview works.
 
 Add both domains in Vercel:
 
-- `menuvacnica.mk`
-- `www.menuvacnica.mk`
+- `menuvacnica.com.mk`
+- `www.menuvacnica.com.mk`
 
-At the DNS provider, change only the records Vercel asks for. Do not delete mail-related records unless you have copied them first:
+At the DNS provider, change only the web records Vercel asks for. Do not delete mail-related records unless you have copied them first:
+
+- Apex/root web record: `A` -> `76.76.21.21`
+- `www`: `CNAME` -> `cname.vercel-dns.com`
+
+If email is active on this domain, keep mail pointed at the old mail server instead of the new Vercel web record:
+
+- `mail`: `A` -> `216.24.57.1` if this is still the active mail server
+- `MX`: `mail.menuvacnica.com.mk`
 
 - `MX`
 - `TXT`
@@ -55,4 +63,4 @@ At the DNS provider, change only the records Vercel asks for. Do not delete mail
 - DKIM
 - DMARC
 
-After DNS propagates, verify HTTPS and submit `https://menuvacnica.mk/sitemap.xml` in Google Search Console.
+After DNS propagates, verify HTTPS and submit `https://menuvacnica.com.mk/sitemap.xml` in Google Search Console.

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import io
 import json
@@ -41,7 +41,9 @@ DATA_FILE =BASE_DIR /"data"/"site_data.json"
 ADMIN_SETTINGS_FILE =BASE_DIR /"data"/"admin_settings.json"
 GALLERY_DIR =BASE_DIR /"static"/"images"/"gallery"
 VIDEO_DIR =BASE_DIR /"static"/"videos"
-DEFAULT_SITE_URL ="https://menuvacnica.mk"
+DEFAULT_SITE_URL ="https://menuvacnica.com.mk"
+LEGACY_SITE_URLS ={"https://menuvacnica.mk","http://menuvacnica.mk"}
+LEGACY_SITE_HOSTS ={"menuvacnica.mk","www.menuvacnica.mk"}
 SUPPORTED_LANGUAGES =("mk","en")
 _GALLERY_ALLOWED_EXTENSIONS ={"jpg","jpeg","png","webp","gif"}
 _VIDEO_ALLOWED_EXTENSIONS ={"mp4","webm","mov","avi","mkv"}
@@ -376,42 +378,42 @@ DEFAULT_DATA ={
 "gallery":[
 {
 "image":"images/gallery/menuva5.jpg",
-"title":{"mk":"Менувачница","en":"Exchange Office"},
+"title":{"mk":"Менувачница ЕУРО МАРФИ","en":"EURO MARFI Exchange Office"},
 "description":{
-"mk":"Р¤РѕС‚РѕРіСЂР°С„РёСР° РѕРґ РјРµРЅСѓРІР°С‡РЅРёС†Р°С‚Р°.",
-"en":"Photo of the exchange office.",
+"mk":"Надворешен поглед од менувачницата ЕУРО МАРФИ.",
+"en":"Outdoor view of EURO MARFI exchange office.",
 },
 },
 {
 "image":"images/gallery/menuva1.jpg",
-"title":{"mk":"Услужен простор","en":"Service Area"},
+"title":{"mk":"Влез во менувачницата","en":"Exchange Office Entrance"},
 "description":{
-"mk":"Р¤РѕС‚РѕРіСЂР°С„РёСР° РѕРґ РІРЅР°С‚СЂРµС€РЅРёРѕС‚ РїСЂРѕСЃС‚РѕСЂ.",
-"en":"Photo of the interior area.",
+"mk":"Поглед кон влезот и услугата за менување девизи.",
+"en":"View of the entrance and foreign currency exchange service.",
 },
 },
 {
 "image":"images/gallery/menuva4.jpg",
-"title":{"mk":"Р›РѕРєР°С†РёСР°","en":"Location"},
+"title":{"mk":"Локација","en":"Location"},
 "description":{
-"mk":"Р¤РѕС‚РѕРіСЂР°С„РёСР° РѕРґ РѕР±СРµРєС‚РѕС‚ Рё РѕРєРѕР»РёРЅР°С‚Р°.",
+"mk":"Фотографија од објектот и околината.",
 "en":"Photo of the office and surroundings.",
 },
 },
 {
 "image":"images/gallery/menuva.jpg",
-"title":{"mk":"Простор","en":"Office Space"},
+"title":{"mk":"Работно време","en":"Working Hours"},
 "description":{
-"mk":"Дополнителен поглед од менувачницата.",
-"en":"Additional view of the exchange office.",
+"mk":"Информација за работното време на менувачницата.",
+"en":"Working hours information for the exchange office.",
 },
 },
 {
 "image":"images/gallery/menuva3.jpg",
-"title":{"mk":"Ентериер","en":"Interior"},
+"title":{"mk":"Излог","en":"Storefront"},
 "description":{
-"mk":"Р¤РѕС‚РѕРіСЂР°С„РёСР° РѕРґ РµРЅС‚РµСЂРёРµСЂРѕС‚.",
-"en":"Photo of the interior.",
+"mk":"Дополнителен поглед од излогот и објектот.",
+"en":"Additional view of the storefront and office.",
 },
 },
 ],
@@ -1071,6 +1073,8 @@ def en_galerija ():
 
 def get_public_base_url ():
     configured_url =os .environ .get ("SITE_URL",DEFAULT_SITE_URL ).strip ().rstrip ("/")
+    if configured_url in LEGACY_SITE_URLS :
+        configured_url =DEFAULT_SITE_URL
     if configured_url :
         return configured_url
 
@@ -1266,6 +1270,14 @@ def build_local_business_schema (site_data :dict ,page_meta :dict ):
         ],
         })
     return {"@context":"https://schema.org","@graph":graph}
+
+
+@app .before_request
+def redirect_legacy_domain ():
+    forwarded_host =request .headers .get ("X-Forwarded-Host",request .host ).split (",")[0 ].strip ().split (":")[0 ].lower ()
+    if forwarded_host in LEGACY_SITE_HOSTS :
+        path =request .full_path if request .query_string else request .path
+        return redirect (f"{DEFAULT_SITE_URL}{path}",code =301 )
 
 @app .after_request
 def apply_seo_headers (response ):

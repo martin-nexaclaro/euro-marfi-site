@@ -155,12 +155,12 @@
       "image": "images/gallery/menuva5.jpg",
       "video_url": "",
       "title": {
-        "mk": "Менувачница",
-        "en": "Exchange Office"
+        "mk": "Менувачница ЕУРО МАРФИ",
+        "en": "EURO MARFI Exchange Office"
       },
       "description": {
-        "mk": "Фотографија од менувачницата.",
-        "en": "Photo of the exchange office."
+        "mk": "Надворешен поглед од менувачницата ЕУРО МАРФИ.",
+        "en": "Outdoor view of EURO MARFI exchange office."
       }
     },
     {
@@ -168,12 +168,12 @@
       "image": "images/gallery/menuva1.jpg",
       "video_url": "",
       "title": {
-        "mk": "Услужен простор",
-        "en": "Service Area"
+        "mk": "Влез во менувачницата",
+        "en": "Exchange Office Entrance"
       },
       "description": {
-        "mk": "Фотографија од внатрешниот простор.",
-        "en": "Photo of the interior area."
+        "mk": "Поглед кон влезот и услугата за менување девизи.",
+        "en": "View of the entrance and foreign currency exchange service."
       }
     },
     {
@@ -194,12 +194,12 @@
       "image": "images/gallery/menuva.jpg",
       "video_url": "",
       "title": {
-        "mk": "Простор",
-        "en": "Office Space"
+        "mk": "Работно време",
+        "en": "Working Hours"
       },
       "description": {
-        "mk": "Дополнителен поглед од менувачницата.",
-        "en": "Additional view of the exchange office."
+        "mk": "Информација за работното време на менувачницата.",
+        "en": "Working hours information for the exchange office."
       }
     },
     {
@@ -207,14 +207,14 @@
       "image": "images/gallery/menuva3.jpg",
       "video_url": "",
       "title": {
-        "mk": "Ентериер",
-        "en": "Interior"
+        "mk": "Излог",
+        "en": "Storefront"
       },
       "description": {
-        "mk": "Фотографија од ентериерот.",
-        "en": "Photo of the interior."
+        "mk": "Дополнителен поглед од излогот и објектот.",
+        "en": "Additional view of the storefront and office."
       }
     }
   ],
-  "visitor_count": 16
+  "visitor_count": 2991516
 }
