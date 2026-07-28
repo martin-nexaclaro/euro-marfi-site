@@ -281,3 +281,25 @@ document.querySelectorAll("[data-gallery-slider]").forEach((slider) => {
   renderSlide(0);
   startAutoplay();
 });
+
+const quickAdminForm = document.querySelector("[data-admin-form]");
+
+if (quickAdminForm) {
+  const saveStatus = quickAdminForm.querySelector("[data-save-status]");
+  const saveButton = quickAdminForm.querySelector(".admin-save-button");
+
+  const markChanged = () => {
+    quickAdminForm.classList.add("is-dirty");
+    if (saveStatus) saveStatus.textContent = "Имате незачувани промени";
+  };
+
+  quickAdminForm.addEventListener("input", markChanged);
+  quickAdminForm.addEventListener("change", markChanged);
+  quickAdminForm.addEventListener("submit", () => {
+    if (saveStatus) saveStatus.textContent = "Се зачувува…";
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.textContent = "Се зачувува…";
+    }
+  });
+}

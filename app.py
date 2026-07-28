@@ -6,7 +6,7 @@ import os
 import re
 import uuid
 from copy import deepcopy
-from datetime import datetime ,time
+from datetime import datetime ,time ,timedelta
 from pathlib import Path
 from urllib.error import HTTPError ,URLError
 from urllib.parse import quote
@@ -29,6 +29,9 @@ from werkzeug.utils import secure_filename
 app =Flask (__name__ )
 app .config ["SECRET_KEY"]=os .environ .get ("SECRET_KEY","change-this-secret-key-before-production")
 app .config ["PREFERRED_URL_SCHEME"]="https"
+app .config ["PERMANENT_SESSION_LIFETIME"]=timedelta (days =30 )
+app .config ["SESSION_COOKIE_HTTPONLY"]=True
+app .config ["SESSION_COOKIE_SAMESITE"]="Lax"
 
 # Change this starter username later for the real owner/admin login.
 # The password is now stored as a secure hash in data/admin_settings.json
@@ -826,10 +829,22 @@ def increment_visitor_count ()->int :
     return int (data .get ("visitor_count",LEGACY_VISITOR_COUNT ))
 
 def update_site_data_from_admin_form (data :dict ,form ,files =None )->dict :
-    data ["business"]["daily_info"]={
-    "mk":form .get ("daily_info_mk","").strip (),
-    "en":form .get ("daily_info_en","").strip (),
-    }
+    rate_date =form .get ("rate_date","").strip ()
+    if rate_date :
+        try :
+            parsed_rate_date =datetime .strptime (rate_date ,"%Y-%m-%d")
+            display_rate_date =parsed_rate_date .strftime ("%d.%m.%Y")
+            data ["business"]["daily_info"]={
+            "mk":f"Курсна листа за {display_rate_date}",
+            "en":f"Exchange rates for {display_rate_date}",
+            }
+        except ValueError :
+            pass
+    elif "daily_info_mk"in form or "daily_info_en"in form :
+        data ["business"]["daily_info"]={
+        "mk":form .get ("daily_info_mk",localized_value (data ["business"].get ("daily_info"),"mk")).strip (),
+        "en":form .get ("daily_info_en",localized_value (data ["business"].get ("daily_info"),"en")).strip (),
+        }
     data ["business"]["working_hours"]={
     "mk":form .get ("working_hours_mk","").strip (),
     "en":form .get ("working_hours_en","").strip (),
@@ -1202,11 +1217,11 @@ def build_local_business_schema (site_data :dict ,page_meta :dict ):
     ],
     "currenciesAccepted":", ".join (["MKD"]+currencies ),
     "paymentAccepted":"Cash",
-    "openingHours":"Mo-Sa 09:00-16:00",
+    "openingHours":"Mo-Fr 09:00-16:00",
     "openingHoursSpecification":[
     {
     "@type":"OpeningHoursSpecification",
-    "dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+    "dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],
     "opens":"09:00",
     "closes":"16:00",
     }
@@ -1359,6 +1374,9 @@ def favicon_ico ():
 def login ():
     admin_settings =load_admin_settings ()
 
+    if request .method =="GET"and is_logged_in ():
+        return redirect (url_for ("admin"))
+
     if request .method =="POST":
         username =request .form .get ("username","").strip ()
         password =request .form .get ("password","").strip ()
@@ -1369,6 +1387,7 @@ def login ():
         elif admin_settings ["totp_enabled"]and not pyotp .TOTP (admin_settings ["totp_secret"]).verify (otp_code ,valid_window =1 ):
             flash ("Внесете валиден 2FA код од апликацијата за автентикација.","error")
         else :
+            session .permanent =request .form .get ("remember_me")=="1"
             session ["admin_logged_in"]=True
             session ["admin_username"]=admin_settings ["username"]
             clear_pending_totp_secret ()
@@ -1452,9 +1471,15 @@ def admin ():
         totp_setup_secret =get_pending_totp_secret ()
         totp_qr_svg ,totp_setup_uri =build_totp_setup_payload (admin_settings ["username"],totp_setup_secret )
 
+    rate_date_value =datetime .now ().strftime ("%Y-%m-%d")
+    stored_rate_date =re .search (r"(\d{2})\.(\d{2})\.(\d{4})",localized_value (data ["business"].get ("daily_info"),"mk"))
+    if stored_rate_date :
+        rate_date_value =f"{stored_rate_date .group (3)}-{stored_rate_date .group (2)}-{stored_rate_date .group (1)}"
+
     return render_template (
     "admin.html",
     data =data ,
+    rate_date_value =rate_date_value ,
     admin_settings =admin_settings ,
     totp_setup_secret =totp_setup_secret ,
     totp_qr_svg =totp_qr_svg ,

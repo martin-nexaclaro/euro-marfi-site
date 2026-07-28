@@ -26,6 +26,287 @@
   --transition: 220ms ease;
 }
 
+/* Rates-first admin workflow */
+.quick-admin-form {
+  gap: 16px;
+}
+
+.admin-save-bar {
+  position: sticky;
+  top: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px 12px 18px;
+  border: 1px solid rgba(116, 232, 255, 0.24);
+  border-radius: 20px;
+  background: rgba(7, 18, 31, 0.94);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(18px);
+}
+
+.admin-save-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted-strong);
+  font-size: 0.9rem;
+}
+
+.save-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 14px rgba(125, 255, 199, 0.6);
+}
+
+.admin-form.is-dirty .save-status-dot {
+  background: var(--warning);
+  box-shadow: 0 0 14px rgba(255, 217, 139, 0.55);
+}
+
+.admin-save-button {
+  min-width: 210px;
+  min-height: 48px;
+}
+
+.daily-rates-editor {
+  overflow: hidden;
+  border-color: rgba(116, 232, 255, 0.2);
+}
+
+.daily-rates-heading {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.75fr) minmax(260px, 1.25fr);
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.step-label,
+.daily-rates-help strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+}
+
+.rate-date-field {
+  font-weight: 700;
+}
+
+.rate-date-field input {
+  max-width: 280px;
+  font-size: 1.05rem;
+}
+
+.daily-rates-help span {
+  color: var(--muted);
+}
+
+.currency-table-editor {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.currency-editor-head,
+.currency-table-editor .currency-editor {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(120px, 0.75fr) minmax(120px, 0.75fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.currency-editor-head {
+  padding: 11px 16px;
+  color: var(--muted);
+  background: rgba(116, 232, 255, 0.055);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.currency-table-editor .currency-editor {
+  padding: 10px 16px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.currency-editor-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.05rem;
+}
+
+.currency-editor-name img {
+  width: 34px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.24);
+}
+
+.currency-table-editor .currency-editor label span {
+  display: none;
+}
+
+.currency-table-editor .currency-editor input {
+  padding: 11px 13px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.admin-disclosure {
+  padding: 0;
+}
+
+.admin-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.admin-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-disclosure > summary::after {
+  content: "+";
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--accent);
+  font-size: 1.35rem;
+}
+
+.admin-disclosure[open] > summary::after {
+  content: "−";
+}
+
+.admin-disclosure summary span {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-disclosure summary strong {
+  font-size: 1.05rem;
+}
+
+.admin-disclosure summary small {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 400;
+}
+
+.disclosure-content,
+.admin-security-content {
+  padding: 0 22px 22px;
+  border-top: 1px solid var(--line);
+}
+
+.disclosure-content {
+  padding-top: 20px;
+}
+
+.security-disclosure {
+  margin-top: 18px;
+  padding: 0;
+}
+
+.admin-security-content .admin-security-heading {
+  padding-top: 22px;
+}
+
+@media (max-width: 700px) {
+  .admin-shell {
+    padding: 14px;
+  }
+
+  .admin-header-card h1 {
+    font-size: 2rem;
+  }
+
+  .admin-save-bar {
+    top: 6px;
+    padding: 9px;
+  }
+
+  .admin-save-status {
+    display: none;
+  }
+
+  .admin-save-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .daily-rates-heading {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .rate-date-field input {
+    max-width: none;
+  }
+
+  .currency-editor-head {
+    display: none;
+  }
+
+  .currency-table-editor .currency-editor {
+    grid-template-columns: 92px minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .currency-editor-name {
+    gap: 8px;
+    font-size: 0.95rem;
+  }
+
+  .currency-editor-name img {
+    width: 28px;
+    height: 20px;
+  }
+
+  .currency-table-editor .currency-editor label {
+    gap: 4px;
+  }
+
+  .currency-table-editor .currency-editor label span {
+    display: block;
+    color: var(--muted);
+    font-size: 0.7rem;
+    text-align: center;
+  }
+
+  .currency-table-editor .currency-editor input {
+    padding: 10px 7px;
+    font-size: 1rem;
+  }
+}
+
 *,
 *::before,
 *::after {
@@ -2258,6 +2539,87 @@ textarea:focus {
   }
 }
 
+/* Keep the admin workflow overrides after the legacy component rules. */
+.admin-disclosure,
+.security-disclosure {
+  padding: 0;
+}
+
+@media (max-width: 700px) {
+  .admin-shell {
+    padding: 14px;
+  }
+}
+
+.admin-logout-btn {
+  border-color: rgba(255, 92, 112, 0.72);
+  background: linear-gradient(135deg, rgba(224, 52, 75, 0.94), rgba(165, 28, 49, 0.96));
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(190, 35, 58, 0.24);
+}
+
+.admin-logout-btn:hover {
+  border-color: rgba(255, 132, 146, 0.94);
+  background: linear-gradient(135deg, #ef4762, #bc253e);
+}
+
+.working-hours-quick-field label {
+  font-weight: 700;
+}
+
+.working-hours-quick-field input {
+  font-size: 1rem;
+}
+
+.rates-entry-help {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.rates-entry-help strong {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.remember-me-field {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 11px;
+  align-items: start;
+  padding: 13px 14px;
+  border: 1px solid rgba(150, 199, 255, 0.13);
+  border-radius: 15px;
+  background: rgba(3, 9, 18, 0.44);
+  cursor: pointer;
+}
+
+.remember-me-field input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.remember-me-field span {
+  display: grid;
+  gap: 3px;
+}
+
+.remember-me-field small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+@media (max-width: 700px) {
+  .rates-entry-help {
+    display: grid;
+    gap: 5px;
+  }
+}
+
 @media (max-width: 640px) {
   .faq-item summary {
     min-height: 58px;
@@ -2753,5 +3115,16 @@ textarea:focus {
     min-height: 54px;
     padding: 11px 14px;
     justify-content: center;
+  }
+}
+
+.admin-disclosure,
+.security-disclosure {
+  padding: 0;
+}
+
+@media (max-width: 700px) {
+  .admin-shell {
+    padding: 14px;
   }
 }

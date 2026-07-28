@@ -44,6 +44,13 @@
       </label>
       <p class="login-helper">Внесете го 6-цифрениот код од Authenticator апликацијата.</p>
       {% endif %}
+      <label class="remember-me-field">
+        <input type="checkbox" name="remember_me" value="1">
+        <span>
+          <strong>Запомни ме 30 дена на овој уред</strong>
+          <small>Користете го ова само на компјутерот на сопственикот.</small>
+        </span>
+      </label>
       <button type="submit" class="primary-btn">{{ ui.login_submit }}</button>
     </form>
   </div>

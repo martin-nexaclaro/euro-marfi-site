@@ -8,121 +8,98 @@
   <div class="admin-shell" data-reveal>
     <div class="admin-header">
       <div class="admin-header-card">
-        <span class="eyebrow">{{ ui.admin_kicker }}</span>
-        <h1>{{ ui.admin_title }}</h1>
-        <p class="admin-subtitle">{{ ui.admin_subtitle_text }}</p>
+        <span class="eyebrow">Брзо уредување</span>
+        <h1>Дневна курсна листа</h1>
+        <p class="admin-subtitle">Променете го датумот и курсевите, па притиснете „Зачувај“. Тоа е сè.</p>
       </div>
       <div class="admin-actions">
-        <a class="secondary-btn" href="{{ url_for('logout') }}">{{ ui.admin_logout }}</a>
+        <a class="secondary-btn" href="#photos">Фотографии</a>
+        <a class="secondary-btn" href="{{ url_for('index') }}" target="_blank" rel="noopener">Прегледај сајт</a>
+        <a class="secondary-btn danger-btn admin-logout-btn" href="{{ url_for('logout') }}">{{ ui.admin_logout }}</a>
       </div>
     </div>
 
-    <form method="post" class="admin-form" enctype="multipart/form-data">
+    <form method="post" class="admin-form quick-admin-form" enctype="multipart/form-data" data-admin-form>
       <input type="hidden" name="form_action" value="save_content">
 
-      <div class="admin-grid">
-        <section class="form-card">
-          <div class="form-card-header">
-            <h2>{{ ui.admin_basic_title }}</h2>
-            <span>{{ ui.admin_basic_text }}</span>
-          </div>
-          <div class="form-stack">
-            <label>
-              {{ ui.admin_daily_info_mk }}
-              <input type="text" name="daily_info_mk" value="{{ data.business.daily_info.mk }}" required>
-            </label>
-            <label>
-              {{ ui.admin_daily_info_en }}
-              <input type="text" name="daily_info_en" value="{{ data.business.daily_info.en }}" required>
-            </label>
-            <label>
-              {{ ui.admin_working_hours_mk }}
-              <input type="text" name="working_hours_mk" value="{{ data.business.working_hours.mk }}" required>
-            </label>
-            <label>
-              {{ ui.admin_working_hours_en }}
-              <input type="text" name="working_hours_en" value="{{ data.business.working_hours.en }}" required>
-            </label>
-            <label>
-              {{ ui.admin_phone_1 }}
-              <input type="text" name="phone_1" value="{{ data.business.phones[0] }}" required>
-            </label>
-            <label>
-              {{ ui.admin_phone_2 }}
-              <input type="text" name="phone_2" value="{{ data.business.phones[1] }}" required>
-            </label>
-            <label>
-              {{ ui.admin_address }}
-              <input type="text" name="address" value="{{ data.business.address }}" required>
-            </label>
-            <label>
-              {{ ui.admin_map_link }}
-              <input type="text" name="map_embed_url" value="{{ data.business.map_embed_url }}" required>
-            </label>
-          </div>
-        </section>
-
-        <section class="form-card">
-          <div class="form-card-header">
-            <h2>{{ ui.admin_notes_title }}</h2>
-            <span>{{ ui.admin_notes_text }}</span>
-          </div>
-          <div class="form-stack">
-            <label>
-              {{ ui.admin_note_1_mk }}
-              <input type="text" name="note_1_mk" value="{{ data.notes.mk[0] }}" required>
-            </label>
-            <label>
-              {{ ui.admin_note_1_en }}
-              <input type="text" name="note_1_en" value="{{ data.notes.en[0] }}" required>
-            </label>
-            <label>
-              {{ ui.admin_note_2_mk }}
-              <input type="text" name="note_2_mk" value="{{ data.notes.mk[1] }}" required>
-            </label>
-            <label>
-              {{ ui.admin_note_2_en }}
-              <input type="text" name="note_2_en" value="{{ data.notes.en[1] }}" required>
-            </label>
-            <label>
-              {{ ui.admin_note_3_mk }}
-              <input type="text" name="note_3_mk" value="{{ data.notes.mk[2] }}" required>
-            </label>
-            <label>
-              {{ ui.admin_note_3_en }}
-              <input type="text" name="note_3_en" value="{{ data.notes.en[2] }}" required>
-            </label>
-          </div>
-        </section>
+      <div class="admin-save-bar">
+        <div class="admin-save-status" aria-live="polite">
+          <span class="save-status-dot"></span>
+          <span data-save-status>Подготвено за уредување</span>
+        </div>
+        <button type="submit" class="primary-btn admin-save-button">Зачувај ги промените</button>
       </div>
 
-      <section class="form-card" data-reveal>
-        <div class="form-card-header">
-          <h2>{{ ui.admin_rates_title }}</h2>
-          <span>{{ ui.admin_rates_text }}</span>
+      <section class="form-card daily-rates-editor">
+        <div class="daily-rates-heading">
+          <div>
+            <span class="step-label">1 · ДАТУМ</span>
+            <label class="rate-date-field">
+              Датум на курсна листа
+              <input type="date" name="rate_date" value="{{ rate_date_value }}" required>
+            </label>
+          </div>
+          <div class="working-hours-quick-field">
+            <span class="step-label">2 · РАБОТНО ВРЕМЕ</span>
+            <label>
+              Работно време
+              <input type="text" name="working_hours_mk" value="{{ data.business.working_hours.mk }}" placeholder="Понеделник - Петок: 09 до 16 часот" required>
+            </label>
+          </div>
         </div>
-        <div class="currency-admin-grid">
+        <div class="daily-rates-help rates-entry-help">
+          <strong>3 · ВНЕСЕТЕ ГИ КУРСЕВИТЕ</strong>
+          <span>Куповен и продажен курс за секоја валута.</span>
+        </div>
+        <div class="currency-table-editor">
+          <div class="currency-editor-head" aria-hidden="true">
+            <span>Валута</span><span>Куповен</span><span>Продажен</span>
+          </div>
           {% for currency in data.currencies %}
           <div class="currency-editor">
-            <h3>{{ currency.code }}</h3>
-            <label>
-              {{ ui.admin_flag_label }}
-              <input type="text" name="flag_{{ currency.code }}" value="{{ currency.flag }}" required>
-            </label>
-            <label>
-              {{ ui.admin_buy_label }}
-              <input type="text" name="buy_{{ currency.code }}" value="{{ currency.buy }}" required>
-            </label>
-            <label>
-              {{ ui.admin_sell_label }}
-              <input type="text" name="sell_{{ currency.code }}" value="{{ currency.sell }}" required>
-            </label>
+            <div class="currency-editor-name">
+              {% if currency.flag_image %}<img src="{{ url_for('static', filename=currency.flag_image) }}" alt="">{% endif %}
+              <strong>{{ currency.code }}</strong>
+            </div>
+            <label><span>Куповен</span><input type="text" inputmode="decimal" name="buy_{{ currency.code }}" value="{{ currency.buy }}" required></label>
+            <label><span>Продажен</span><input type="text" inputmode="decimal" name="sell_{{ currency.code }}" value="{{ currency.sell }}" required></label>
           </div>
           {% endfor %}
         </div>
       </section>
 
-      <section class="form-card" data-reveal>
+      <details class="form-card admin-disclosure">
+        <summary><span><strong>Текст под курсната листа</strong><small>Трите дневни забелешки</small></span></summary>
+        <div class="disclosure-content form-stack">
+          <label>Забелешка 1 MK<input type="text" name="note_1_mk" value="{{ data.notes.mk[0] }}" required></label>
+          <label>Забелешка 2 MK<input type="text" name="note_2_mk" value="{{ data.notes.mk[1] }}" required></label>
+          <label>Забелешка 3 MK<input type="text" name="note_3_mk" value="{{ data.notes.mk[2] }}" required></label>
+        </div>
+      </details>
+
+      <details class="form-card admin-disclosure">
+        <summary><span><strong>English version</strong><small>Open only when the English text needs changing</small></span></summary>
+        <div class="disclosure-content form-stack">
+          <label>Working hours EN<input type="text" name="working_hours_en" value="{{ data.business.working_hours.en }}" required></label>
+          <label>Note 1 EN<input type="text" name="note_1_en" value="{{ data.notes.en[0] }}" required></label>
+          <label>Note 2 EN<input type="text" name="note_2_en" value="{{ data.notes.en[1] }}" required></label>
+          <label>Note 3 EN<input type="text" name="note_3_en" value="{{ data.notes.en[2] }}" required></label>
+        </div>
+      </details>
+
+      <details class="form-card admin-disclosure">
+        <summary><span><strong>Контакт и локација</strong><small>Овие податоци ретко се менуваат</small></span></summary>
+        <div class="disclosure-content form-stack">
+          <label>Телефон 1<input type="text" name="phone_1" value="{{ data.business.phones[0] }}" required></label>
+          <label>Телефон 2<input type="text" name="phone_2" value="{{ data.business.phones[1] }}" required></label>
+          <label>Адреса<input type="text" name="address" value="{{ data.business.address }}" required></label>
+          <label>Линк за мапа<input type="text" name="map_embed_url" value="{{ data.business.map_embed_url }}" required></label>
+        </div>
+      </details>
+
+      <details class="form-card admin-disclosure gallery-disclosure" id="photos">
+        <summary><span><strong>Фотографии и видеа</strong><small>Додавање, замена или бришење од галеријата</small></span></summary>
+        <div class="disclosure-content">
         <div class="form-card-header">
           <h2>Галерија</h2>
           <span>Додајте, уредете или избришете слики и видеа. Зачувајте за да се применат промените.</span>
@@ -204,7 +181,8 @@
         <div class="gallery-add-wrap">
           <button type="button" class="secondary-btn" onclick="addGalleryItem()">+ Додади нова ставка</button>
         </div>
-      </section>
+        </div>
+      </details>
 
       <script>
         function deleteGalleryItem(index) {
@@ -318,7 +296,9 @@
       </div>
     </form>
 
-    <section class="admin-security" data-reveal>
+    <details class="admin-security admin-disclosure security-disclosure">
+      <summary><span><strong>Безбедност на профилот</strong><small>Лозинка и двофакторска заштита</small></span></summary>
+      <div class="admin-security-content">
       <div class="admin-security-heading">
         <span class="eyebrow">Security</span>
         <h2>Безбедност на админ најава</h2>
@@ -504,7 +484,8 @@
           {% endif %}
         </section>
       </div>
-    </section>
+      </div>
+    </details>
   </div>
 </section>
 {% endblock %}
