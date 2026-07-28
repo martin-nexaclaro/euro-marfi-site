@@ -104,6 +104,13 @@
 .rate-date-field input {
   max-width: 280px;
   font-size: 1.05rem;
+  color-scheme: dark;
+}
+
+.rate-date-field input::-webkit-calendar-picker-indicator {
+  opacity: 0.92;
+  filter: invert(1) brightness(1.35);
+  cursor: pointer;
 }
 
 .daily-rates-help span {

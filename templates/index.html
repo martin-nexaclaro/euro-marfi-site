@@ -12,7 +12,7 @@
       <div class="table-shell-header-right">
         <div class="hours-badge">
           <span>{{ ui.hours_label }}</span>
-          <strong>{{ business_status.display_hours }}</strong>
+          <strong>{{ text_for(data.business.working_hours) }}</strong>
         </div>
         <div class="table-badge">{{ text_for(data.business.daily_info) | highlight_date | safe }}</div>
       </div>
