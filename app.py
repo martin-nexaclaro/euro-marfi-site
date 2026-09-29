@@ -69,18 +69,24 @@ LEGACY_VISITOR_COUNT =2991516
 PUBLIC_SITEMAP_PAGES =(
 ("index","weekly","1.0"),
 ("kursna_lista","daily","0.95"),
+("menuvacnica_skopje","weekly","0.9"),
+("menuvacnici_skopje","weekly","0.9"),
 ("lokacija","monthly","0.8"),
 ("galerija","monthly","0.7"),
 )
 CANONICAL_ENDPOINTS ={
 "en_index":"index",
 "en_kursna_lista":"kursna_lista",
+"en_exchange_office_skopje":"menuvacnica_skopje",
+"en_exchange_offices_skopje":"menuvacnici_skopje",
 "en_lokacija":"lokacija",
 "en_galerija":"galerija",
 }
 LOCALIZED_ROUTE_PATHS ={
 "index":{"mk":"/","en":"/en/"},
 "kursna_lista":{"mk":"/kursna-lista","en":"/en/exchange-rates"},
+"menuvacnica_skopje":{"mk":"/menuvacnica-skopje","en":"/en/exchange-office-skopje"},
+"menuvacnici_skopje":{"mk":"/menuvacnici-skopje","en":"/en/exchange-offices-skopje"},
 "lokacija":{"mk":"/lokacija","en":"/en/location"},
 "galerija":{"mk":"/galerija","en":"/en/gallery"},
 }
@@ -1179,6 +1185,54 @@ def update_site_data_from_admin_form (data :dict ,form ,files =None )->dict :
     return data
 
 
+LANDING_PAGE_CONTENT ={
+"menuvacnica_skopje":{
+"mk":{
+"title":"Менувачница Скопје",
+"text":"ЕУРО МАРФИ е менувачница во Скопје со дневна курсна листа, куповен и продажен курс, директен телефонски контакт и локација за брза услуга.",
+"cta":"Погледнете ја денешната курсна листа",
+},
+"en":{
+"title":"Exchange Office Skopje",
+"text":"EURO MARFI is an exchange office in Skopje with daily buy and sell rates, direct phone contact, and a clear location for fast currency exchange service.",
+"cta":"View today's exchange rates",
+},
+},
+"menuvacnici_skopje":{
+"mk":{
+"title":"Менувачници Скопје",
+"text":"Ако барате менувачници во Скопје, ЕУРО МАРФИ ја прикажува дневната курсна листа веднаш на почетокот, со работно време, телефон и адреса.",
+"cta":"Отворете курсна листа",
+},
+"en":{
+"title":"Exchange Offices Skopje",
+"text":"For exchange offices in Skopje, EURO MARFI shows the live exchange table first, with working hours, phone numbers, and location details.",
+"cta":"Open exchange rates",
+},
+},
+"exchange_office_skopje":{
+"mk":{
+"title":"Менувачница Скопје",
+"text":"Дневна курсна листа за валути во Скопје со куповен и продажен курс, работно време и директен контакт.",
+"cta":"Курсна листа",
+},
+"en":{
+"title":"Exchange Office Skopje",
+"text":"Daily currency exchange rates in Skopje with buy and sell rates, working hours, and direct contact information.",
+"cta":"Exchange rates",
+},
+},
+}
+
+
+def get_landing_content (endpoint :str |None =None ,lang :str |None =None )->dict |None :
+    canonical_endpoint =normalize_public_endpoint (endpoint or request .endpoint )
+    if canonical_endpoint not in LANDING_PAGE_CONTENT :
+        return None
+    selected_lang =lang or get_current_language ()
+    return LANDING_PAGE_CONTENT [canonical_endpoint ].get (selected_lang )or LANDING_PAGE_CONTENT [canonical_endpoint ].get ("mk")
+
+
 @app .template_filter ("highlight_date")
 def highlight_date_filter (value :str )->str :
     return re .sub (r"(\d{2}\.\d{2}\.\d{4})",r'<strong class="date-accent">\1</strong>',value )
@@ -1202,6 +1256,7 @@ def inject_site_data ():
     "localized_url":lambda endpoint ,lang =None :build_localized_page_url (endpoint ,lang or current_lang ),
     "localized_path":lambda endpoint ,lang =None :build_localized_page_path (endpoint ,lang or current_lang ),
     "local_business_schema":build_local_business_schema (site_data ,page_meta ),
+    "landing_content":get_landing_content (page_meta ["canonical_endpoint"],current_lang ),
     }
 
 
@@ -1249,6 +1304,36 @@ def en_index ():
 
 @app .route ("/en/exchange-rates")
 def en_kursna_lista ():
+    session ["lang"]="en"
+    data =load_data ()
+    return render_template ("index.html",data =data )
+
+
+@app .route ("/menuvacnica-skopje")
+@app .route ("/menuvacnica-skopje/")
+def menuvacnica_skopje ():
+    data =load_data ()
+    return render_template ("index.html",data =data )
+
+
+@app .route ("/menuvacnici-skopje")
+@app .route ("/menuvacnici-skopje/")
+def menuvacnici_skopje ():
+    data =load_data ()
+    return render_template ("index.html",data =data )
+
+
+@app .route ("/en/exchange-office-skopje")
+@app .route ("/en/exchange-office-skopje/")
+def en_exchange_office_skopje ():
+    session ["lang"]="en"
+    data =load_data ()
+    return render_template ("index.html",data =data )
+
+
+@app .route ("/en/exchange-offices-skopje")
+@app .route ("/en/exchange-offices-skopje/")
+def en_exchange_offices_skopje ():
     session ["lang"]="en"
     data =load_data ()
     return render_template ("index.html",data =data )
@@ -1372,6 +1457,15 @@ def build_page_meta (site_data :dict ):
     if endpoint =="kursna_lista":
         title ="Курсна листа денес - Менувачница ЕУРО МАРФИ Скопје"if current_lang =="mk"else "Exchange Rates Today - EURO MARFI Exchange Office Skopje"
         description =f"{business_name}: {localized_value (site_data ['business']['daily_info'],current_lang )}. Куповен и продажен курс за EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY и ALB."if current_lang =="mk"else f"{business_name}: {localized_value (site_data ['business']['daily_info'],current_lang )}. Buy and sell rates for EUR, USD, GBP, CHF, CAD, AUD, RSD, BGN, TRY, and ALB."
+    elif endpoint =="menuvacnica_skopje":
+        title ="Менувачница Скопје - Курсна листа | ЕУРО МАРФИ"if current_lang =="mk"else "Exchange Office Skopje - Exchange Rates | EURO MARFI"
+        description ="Менувачница Скопје со дневна курсна листа, куповен и продажен курс, работно време, телефон и локација. ЕУРО МАРФИ Скопје."if current_lang =="mk"else "Exchange office in Skopje with daily buy and sell rates, working hours, phone numbers, and location. EURO MARFI Skopje."
+    elif endpoint =="menuvacnici_skopje":
+        title ="Менувачници Скопје - Дневен курс | ЕУРО МАРФИ"if current_lang =="mk"else "Exchange Offices Skopje - Daily Rates | EURO MARFI"
+        description ="Менувачници Скопје: проверете дневна курсна листа за EUR, USD, GBP, CHF и други валути, со директен контакт и адреса."if current_lang =="mk"else "Exchange offices in Skopje: check daily exchange rates for EUR, USD, GBP, CHF, and other currencies with direct contact and address."
+    elif endpoint =="exchange_office_skopje":
+        title ="Exchange Office Skopje - Daily Exchange Rates | EURO MARFI"if current_lang =="en"else "Менувачница Скопје - Курсна листа | ЕУРО МАРФИ"
+        description ="EURO MARFI exchange office in Skopje with daily currency exchange rates, buy and sell table, working hours, phone numbers, and location."if current_lang =="en"else "Менувачница Скопје со дневна курсна листа, куповен и продажен курс, работно време, телефон и локација."
     elif endpoint =="lokacija":
         title =f"{ui ['nav_location']} | {business_name}"
         description =f"{business_name}: {site_data ['business']['address']}. {ui ['contact_text']}"
@@ -1408,7 +1502,7 @@ def build_local_business_schema (site_data :dict ,page_meta :dict ):
     all_phones =[phone for phone in business .get ("phones",[])if phone ]
     currencies =[currency .get ("code","")for currency in site_data .get ("currencies",[])if currency .get ("code")]
     description =page_meta ["description"]
-    faq_items =UI_TEXT [current_lang ].get ("faq_items",[])if page_meta .get ("canonical_endpoint") in {"index","kursna_lista"}else []
+    faq_items =UI_TEXT [current_lang ].get ("faq_items",[])if page_meta .get ("canonical_endpoint") in {"index","kursna_lista","menuvacnica_skopje","menuvacnici_skopje","exchange_office_skopje"}else []
     graph =[
     {
     "@type":"FinancialService",

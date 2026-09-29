@@ -3,6 +3,17 @@
 {% block title %}{{ page_meta.title }}{% endblock %}
 
 {% block content %}
+{% if landing_content %}
+<section class="landing-intro" data-reveal>
+  <div>
+    <span class="eyebrow">{{ ui.rates_eyebrow }}</span>
+    <h1>{{ landing_content.title }}</h1>
+    <p>{{ landing_content.text }}</p>
+  </div>
+  <a class="landing-intro-link" href="{{ localized_path('kursna_lista') }}">{{ landing_content.cta }}</a>
+</section>
+{% endif %}
+
 <section class="rates-section" data-reveal>
   <div class="table-shell">
     <div class="table-shell-header">
