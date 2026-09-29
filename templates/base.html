@@ -65,7 +65,6 @@
             <a href="{{ localized_path('index') }}" class="{% if page_meta.canonical_endpoint == 'index' %}is-active{% endif %}">{{ ui.nav_home }}</a>
             <a href="{{ localized_path('lokacija') }}" class="{% if page_meta.canonical_endpoint == 'lokacija' %}is-active{% endif %}">{{ ui.nav_location }}</a>
             <a href="{{ localized_path('galerija') }}" class="{% if page_meta.canonical_endpoint == 'galerija' %}is-active{% endif %}">{{ ui.nav_gallery }}</a>
-            <a href="{{ url_for('login') }}" class="{% if request.endpoint in ['login', 'admin'] %}is-active{% endif %}">{{ ui.nav_admin }}</a>
           </nav>
 
           <div class="lang-switcher" aria-label="{{ ui.lang_label }}">

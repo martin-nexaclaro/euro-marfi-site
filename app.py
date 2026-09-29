@@ -5,6 +5,8 @@ import json
 import os
 import re
 import uuid
+from html import unescape
+from html.parser import HTMLParser
 from copy import deepcopy
 from datetime import datetime ,time ,timedelta
 from pathlib import Path
@@ -42,9 +44,13 @@ ADMIN_PASSWORD ="changeme123"
 BASE_DIR =Path (__file__ ).resolve ().parent
 DATA_FILE =BASE_DIR /"data"/"site_data.json"
 ADMIN_SETTINGS_FILE =BASE_DIR /"data"/"admin_settings.json"
+LIVE_RATES_CACHE_FILE =BASE_DIR /"data"/"live_rates_cache.json"
 GALLERY_DIR =BASE_DIR /"static"/"images"/"gallery"
 VIDEO_DIR =BASE_DIR /"static"/"videos"
 DEFAULT_SITE_URL ="https://menuvacnica.com.mk"
+LIVE_RATES_SOURCE_URL =os .environ .get ("LIVE_RATES_SOURCE_URL","https://www.menuvacnica.mk/").strip ()
+LIVE_RATES_TIMEOUT =float (os .environ .get ("LIVE_RATES_TIMEOUT","4")or 4)
+LIVE_RATES_CACHE_SECONDS =int (os .environ .get ("LIVE_RATES_CACHE_SECONDS","300")or 300)
 LEGACY_SITE_URLS ={"https://menuvacnica.mk","http://menuvacnica.mk"}
 LEGACY_SITE_HOSTS ={"menuvacnica.mk","www.menuvacnica.mk"}
 SUPPORTED_LANGUAGES =("mk","en")
@@ -527,6 +533,236 @@ def public_media_url (path :str )->str :
     if path .startswith (("http://","https://","//")):
         return path
     return url_for ("static",filename =path )
+
+
+class TextHTMLParser (HTMLParser ):
+    def __init__ (self ):
+        super ().__init__ ()
+        self .parts =[]
+
+    def handle_data (self ,data ):
+        cleaned =unescape (data ).strip ()
+        if cleaned :
+            self .parts .append (cleaned )
+
+    def text (self )->str :
+        return "\n".join (self .parts )
+
+
+def skopje_now ()->datetime :
+    return datetime .now (SKOPJE_TZ )if SKOPJE_TZ else datetime .now ()
+
+
+def format_rate_date (lang :str ,date_value :datetime |None =None )->str :
+    current_date =date_value or skopje_now ()
+    formatted =current_date .strftime ("%d.%m.%Y")
+    if lang =="en":
+        return f"Exchange rates for {formatted}"
+    return f"Курсна листа за {formatted}"
+
+
+def normalize_rate_value (value :str )->str :
+    return value .replace (",",".").strip ()
+
+
+def translate_live_note (note :str )->str :
+    normalized =re .sub (r"\s+"," ",note ).strip ()
+    normalized =normalized .replace ("!!!!!","").replace ("!!!!","").replace ("!!!","").strip ()
+    match =re .search (r"За да ви откупиме евра.*?цената е\s*([0-9]+(?:[.,][0-9]+)?)",normalized ,re .IGNORECASE )
+    if match :
+        return f"For buying euros from you over 5000, the rate is {normalize_rate_value (match .group (1 ))}"
+    match =re .search (r"За да ви продадеме евра.*?цената е\s*([0-9]+(?:[.,][0-9]+)?)",normalized ,re .IGNORECASE )
+    if match :
+        return f"For selling euros to you over 5000, the rate is {normalize_rate_value (match .group (1 ))}"
+    match =re .search (r"За да ви продадеме долари.*?цената е\s*([0-9]+(?:[.,][0-9]+)?)",normalized ,re .IGNORECASE )
+    if match :
+        return f"For selling dollars to you over 5000, the rate is {normalize_rate_value (match .group (1 ))}"
+    return normalized
+
+
+def translate_working_hours (hours_text :str )->str :
+    normalized =re .sub (r"\s+"," ",hours_text ).strip ()
+    match =re .search (
+    r"Понеделник\s*-\s*Петок\s*:\s*(\d{1,2})(?::(\d{2}))?\s*до\s*(\d{1,2})(?::(\d{2}))?",
+    normalized ,
+    re .IGNORECASE ,
+    )
+    if match :
+        start_hour =int (match .group (1 ))
+        start_minute =match .group (2 )or "00"
+        end_hour =int (match .group (3 ))
+        end_minute =match .group (4 )or "00"
+        return f"Monday - Friday: {start_hour:02d}:{start_minute} to {end_hour:02d}:{end_minute}"
+    match =re .search (
+    r"Понеделник\s*-\s*Недела\s*:\s*(\d{1,2})(?::(\d{2}))?\s*до\s*(\d{1,2})(?::(\d{2}))?",
+    normalized ,
+    re .IGNORECASE ,
+    )
+    if match :
+        start_hour =int (match .group (1 ))
+        start_minute =match .group (2 )or "00"
+        end_hour =int (match .group (3 ))
+        end_minute =match .group (4 )or "00"
+        return f"Monday - Sunday: {start_hour:02d}:{start_minute} to {end_hour:02d}:{end_minute}"
+    return normalized
+
+
+def extract_working_hours (text :str )->str :
+    patterns =[
+    r"Понеделник\s*-\s*Петок\s*:\s*\d{1,2}(?::\d{2})?\s*до\s*\d{1,2}(?::\d{2})?\s*часот",
+    r"Понеделник\s*-\s*Недела\s*:\s*\d{1,2}(?::\d{2})?\s*до\s*\d{1,2}(?::\d{2})?\s*часот",
+    r"Понеделник\s*-\s*Сабота\s*:\s*\d{1,2}(?::\d{2})?\s*до\s*\d{1,2}(?::\d{2})?\s*часот",
+    ]
+    for pattern in patterns :
+        match =re .search (pattern ,text ,re .IGNORECASE )
+        if match :
+            return re .sub (r"\s+"," ",match .group (0 )).strip ()
+    return ""
+
+
+def extract_phone_numbers (text :str )->list [str ]:
+    phones =[]
+    for match in re .finditer (r"(?:☎\s*)?(0\d{2}\s*\d{3}\s*\d{3}|0\d{8})",text ):
+        phone =re .sub (r"\s+"," ",match .group (1 )).strip ()
+        if len (phone )==9 and " "not in phone :
+            phone =f"{phone [:3]} {phone [3:6]} {phone [6:]}"
+        if phone not in phones :
+            phones .append (phone )
+    return phones
+
+
+def parse_live_rates_html (html :str )->dict :
+    parser =TextHTMLParser ()
+    parser .feed (html )
+    text =parser .text ()
+    compact_text =re .sub (r"[ \t]+"," ",text )
+    currency_codes =[currency ["code"]for currency in DEFAULT_DATA ["currencies"]]
+    parsed_rates ={}
+
+    for code in currency_codes :
+        match =re .search (
+        rf"\b{re.escape (code )}\b\s+([0-9]+(?:[.,][0-9]+)?)\s+([0-9]+(?:[.,][0-9]+)?)",
+        compact_text ,
+        re .IGNORECASE ,
+        )
+        if match :
+            parsed_rates [code ]={
+            "buy":normalize_rate_value (match .group (1 )),
+            "sell":normalize_rate_value (match .group (2 )),
+            }
+
+    if len (parsed_rates )<5 :
+        raise ValueError ("The source page did not contain enough valid exchange-rate rows.")
+
+    note_matches =re .findall (r"За да ви [^\n\r]+",text )
+    notes_mk =[re .sub (r"\s+"," ",note ).strip ()for note in note_matches if note .strip ()]
+    notes_mk =notes_mk [:3 ]or deepcopy (DEFAULT_DATA ["notes"]["mk"])
+
+    date_match =re .search (r"\b(\d{2}\.\d{2}\.\d{4})\b",text )
+    source_date =date_match .group (1 )if date_match else ""
+    working_hours_mk =extract_working_hours (text )
+    phones =extract_phone_numbers (text )
+
+    return {
+    "source_url":LIVE_RATES_SOURCE_URL ,
+    "source_date":source_date ,
+    "synced_at":skopje_now ().isoformat (),
+    "rates":parsed_rates ,
+    "notes_mk":notes_mk ,
+    "notes_en":[translate_live_note (note )for note in notes_mk ],
+    "working_hours_mk":working_hours_mk ,
+    "working_hours_en":translate_working_hours (working_hours_mk )if working_hours_mk else "",
+    "phones":phones ,
+    }
+
+
+def fetch_live_rates ()->dict :
+    request_obj =Request (
+    LIVE_RATES_SOURCE_URL ,
+    headers ={"User-Agent":"EURO-MARFI live rates sync/1.0"},
+    )
+    with urlopen (request_obj ,timeout =LIVE_RATES_TIMEOUT )as response :
+        raw_html =response .read ()
+    html =raw_html .decode ("utf-8","replace")
+    return parse_live_rates_html (html )
+
+
+def load_live_rates_cache ()->dict |None :
+    if supabase_is_configured ():
+        cached =load_supabase_json ("live_rates_cache")
+        return cached if isinstance (cached ,dict )else None
+    if not LIVE_RATES_CACHE_FILE .exists ():
+        return None
+    try :
+        return load_local_json (LIVE_RATES_CACHE_FILE ,{})
+    except (json .JSONDecodeError ,OSError ):
+        return None
+
+
+def save_live_rates_cache (cache :dict )->None :
+    if supabase_is_configured ():
+        save_supabase_json ("live_rates_cache",cache )
+        return
+    save_local_json (LIVE_RATES_CACHE_FILE ,cache )
+
+
+def cache_is_fresh (cache :dict )->bool :
+    try :
+        synced_at =datetime .fromisoformat (cache .get ("synced_at",""))
+    except (TypeError ,ValueError ):
+        return False
+    return (skopje_now ()-synced_at ).total_seconds ()<LIVE_RATES_CACHE_SECONDS
+
+
+def get_live_rates_payload ()->dict |None :
+    cache =load_live_rates_cache ()
+    if cache and cache_is_fresh (cache ):
+        return cache
+    try :
+        live_rates =fetch_live_rates ()
+        save_live_rates_cache (live_rates )
+        return live_rates
+    except (HTTPError ,URLError ,TimeoutError ,ValueError ,OSError ):
+        return cache
+
+
+def apply_live_rates (data :dict )->dict :
+    live_rates =get_live_rates_payload ()
+    today =skopje_now ()
+    data ["business"]["daily_info"]={
+    "mk":format_rate_date ("mk",today ),
+    "en":format_rate_date ("en",today ),
+    }
+    if not live_rates :
+        return data
+
+    working_hours_mk =live_rates .get ("working_hours_mk","")
+    working_hours_en =live_rates .get ("working_hours_en","")
+    if working_hours_mk :
+        data ["business"]["working_hours"]={
+        "mk":working_hours_mk ,
+        "en":working_hours_en or translate_working_hours (working_hours_mk ),
+        }
+
+    phones =live_rates .get ("phones")or []
+    if phones :
+        data ["business"]["phones"]=phones
+
+    live_rate_rows =live_rates .get ("rates",{})
+    for currency in data .get ("currencies",[]):
+        rate_row =live_rate_rows .get (currency .get ("code",""))
+        if rate_row :
+            currency ["buy"]=rate_row .get ("buy",currency .get ("buy",""))
+            currency ["sell"]=rate_row .get ("sell",currency .get ("sell",""))
+
+    notes_mk =live_rates .get ("notes_mk")or []
+    notes_en =live_rates .get ("notes_en")or []
+    if notes_mk :
+        data ["notes"]["mk"]=notes_mk
+        data ["notes"]["en"]=notes_en if len (notes_en )==len (notes_mk )else [translate_live_note (note )for note in notes_mk ]
+    return data
+
+
 def ensure_data_file ()->None :
     if supabase_is_configured ():
         if load_supabase_json ("site_data")is None :
@@ -684,7 +920,7 @@ def load_data ()->dict :
     data ["currencies"]=normalized_currencies
 
     data ["visitor_count"]=max (int (data .get ("visitor_count",0 )),LEGACY_VISITOR_COUNT )
-    return data
+    return apply_live_rates (data )
 
 
 def save_data (data :dict )->None :
@@ -1000,25 +1236,22 @@ def legacy_sliki_html ():
 @app .route ("/kursna-lista")
 @app .route ("/kursna-lista/")
 def kursna_lista ():
-    visitor_count =increment_visitor_count ()
     data =load_data ()
-    return render_template ("index.html",data =data ,visitor_count =visitor_count )
+    return render_template ("index.html",data =data )
 
 
 @app .route ("/en/")
 def en_index ():
     session ["lang"]="en"
-    visitor_count =increment_visitor_count ()
     data =load_data ()
-    return render_template ("index.html",data =data ,visitor_count =visitor_count )
+    return render_template ("index.html",data =data )
 
 
 @app .route ("/en/exchange-rates")
 def en_kursna_lista ():
     session ["lang"]="en"
-    visitor_count =increment_visitor_count ()
     data =load_data ()
-    return render_template ("index.html",data =data ,visitor_count =visitor_count )
+    return render_template ("index.html",data =data )
 
 
 @app .route ("/kontakt")
@@ -1057,9 +1290,8 @@ def legacy_sliki_asset (filename :str ):
 
 @app .route ("/")
 def index ():
-    visitor_count =increment_visitor_count ()
     data =load_data ()
-    return render_template ("index.html",data =data ,visitor_count =visitor_count )
+    return render_template ("index.html",data =data )
 
 
 @app .route ("/локација")
