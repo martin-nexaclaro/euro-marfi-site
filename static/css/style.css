@@ -3884,3 +3884,118 @@ body {
     width: 100%;
   }
 }
+
+/* Owner-requested compact exchange table, closer to the legacy site proportions. */
+.rates-section {
+  justify-items: center;
+}
+
+.table-shell {
+  width: min(100%, 980px);
+  margin-inline: auto;
+}
+
+.table-shell-header {
+  grid-template-columns: minmax(150px, 0.55fr) minmax(360px, 1.45fr) !important;
+  gap: 8px !important;
+  padding: 10px !important;
+}
+
+.table-heading,
+.table-shell-header-right .hours-badge,
+.table-shell-header-right .table-badge {
+  min-height: 54px !important;
+  padding: 9px 12px !important;
+}
+
+.rates-eyebrow-large {
+  font-size: 1rem !important;
+}
+
+.hours-badge span {
+  font-size: 0.74rem !important;
+}
+
+.hours-badge strong,
+.table-shell-header-right .table-badge {
+  font-size: 0.95rem !important;
+}
+
+.rates-table th,
+.rates-table td {
+  padding: 8px 14px !important;
+}
+
+.rates-table th {
+  height: 34px;
+  font-size: 0.76rem !important;
+}
+
+.currency-cell {
+  gap: 10px !important;
+}
+
+.flag-chip {
+  width: 34px !important;
+  height: 24px !important;
+  border-radius: 7px !important;
+}
+
+.currency-meta strong {
+  font-size: 0.92rem !important;
+}
+
+.currency-meta span {
+  font-size: 0.8rem !important;
+}
+
+.rate-pill {
+  min-width: 64px !important;
+  padding: 7px 10px !important;
+  border-radius: 7px !important;
+  font-size: 0.92rem !important;
+}
+
+@media (max-width: 820px) {
+  .table-shell {
+    width: 100%;
+  }
+
+  .table-shell-header {
+    grid-template-columns: 1fr !important;
+  }
+
+  .table-shell-header-right {
+    gap: 8px !important;
+  }
+
+  .rates-table th,
+  .rates-table td {
+    padding: 8px 8px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .rates-table th {
+    font-size: 0.68rem !important;
+  }
+
+  .currency-cell {
+    min-width: 112px !important;
+  }
+
+  .flag-chip {
+    width: 30px !important;
+    height: 22px !important;
+  }
+
+  .currency-meta span {
+    display: none;
+  }
+
+  .rate-pill {
+    min-width: 54px !important;
+    padding: 6px 7px !important;
+    font-size: 0.86rem !important;
+  }
+}
