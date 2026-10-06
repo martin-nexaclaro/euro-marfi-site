@@ -1238,6 +1238,12 @@ def highlight_date_filter (value :str )->str :
     return re .sub (r"(\d{2}\.\d{2}\.\d{4})",r'<strong class="date-accent">\1</strong>',value )
 
 
+@app .template_filter ("date_only")
+def date_only_filter (value :str )->str :
+    match =re .search (r"\d{2}\.\d{2}\.\d{4}",value or "")
+    return match .group (0 )if match else value
+
+
 @app .context_processor
 def inject_site_data ():
     current_lang =get_current_language ()

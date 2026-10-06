@@ -4060,3 +4060,21 @@ body {
     font-size: 1rem !important;
   }
 }
+
+/* Date-only display in the rate header. */
+.table-shell-header-right .table-badge-date {
+  justify-content: center !important;
+  text-align: center !important;
+  color: #0f7a5b !important;
+  font-size: 1.42rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 560px) {
+  .table-shell-header-right .table-badge-date {
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 1.24rem !important;
+  }
+}

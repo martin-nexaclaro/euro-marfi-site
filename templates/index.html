@@ -25,7 +25,7 @@
           <span>{{ ui.hours_label }}</span>
           <strong>{{ text_for(data.business.working_hours) }}</strong>
         </div>
-        <div class="table-badge">{{ text_for(data.business.daily_info) | highlight_date | safe }}</div>
+        <div class="table-badge table-badge-date">{{ text_for(data.business.daily_info) | date_only }}</div>
       </div>
     </div>
 
